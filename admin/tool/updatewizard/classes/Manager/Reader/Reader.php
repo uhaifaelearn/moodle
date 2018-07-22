@@ -4,6 +4,7 @@ namespace tool_updatewizard\Manager\Reader;
 
 use Box\Spout\Common\Helper\GlobalFunctionsHelper;
 use Box\Spout\Reader\CSV\Reader as CsvReader;
+use Box\Spout\Reader\CSV\ReaderOptions;
 
 /**
  * Class Reader
@@ -26,7 +27,10 @@ class Reader extends CsvReader
     {
         parent::openReader($filePath);
 
-        $this->rowIterator = new RowIterator($this->sheetIterator->current()->getRowIterator());
+        $this->rowIterator = $this->sheetIterator->current()->getRowIterator();
+        
+        // $this->rowIterator = new RowIterator($this->sheetIterator->current()->getRowIterator());
+        // $this->rowIterator = new RowIterator($filePath, $this->getOptions(), $this->globalFunctionsHelper);
     }
 
     /**
@@ -34,7 +38,9 @@ class Reader extends CsvReader
      */
     public function getHeaderRow()
     {
-        return $this->rowIterator->getHeaderRow();
+        $this->rowIterator->rewind();
+        return $this->rowIterator->current();
+        // return $this->rowIterator->getHeaderRow();
     }
 
     /**
