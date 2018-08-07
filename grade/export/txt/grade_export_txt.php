@@ -52,6 +52,21 @@ class grade_export_txt extends grade_export {
         $strgrades = get_string('grades');
         $profilefields = grade_helper::get_user_profile_fields($this->course->id, $this->usercustomfields);
 
+        //HAIFA-UNIVERSITY-CUSTOMIZATION replace firstname to firstnamephonetic and lastname to lastnamephonetic
+        /**-------------------------------------------------------------------*/
+        foreach ($profilefields as $indexC => $objFields){
+
+            if ($profilefields[$indexC]->shortname=='firstname'){
+                $profilefields[$indexC]->shortname='firstnamephonetic';
+            }
+
+            if ($profilefields[$indexC]->shortname=='lastname'){
+                $profilefields[$indexC]->shortname='lastnamephonetic';
+            }
+
+        }
+        /**-------------------------------------------------------------------*/
+
         $shortname = format_string($this->course->shortname, true, array('context' => context_course::instance($this->course->id)));
         $downloadfilename = clean_filename("$shortname $strgrades");
         $csvexport = new csv_export_writer($this->separator);

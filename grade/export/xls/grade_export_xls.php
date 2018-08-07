@@ -57,6 +57,22 @@ class grade_export_xls extends grade_export {
 
         // Print names of all the fields
         $profilefields = grade_helper::get_user_profile_fields($this->course->id, $this->usercustomfields);
+
+        //HAIFA-UNIVERSITY-CUSTOMIZATION replace firstname to firstnamephonetic and lastname to lastnamephonetic
+        //**--------------------------------------------------------------------------------------*/
+        foreach ($profilefields as $indexC => $objFields){
+
+            if ($profilefields[$indexC]->shortname=='firstname'){
+                $profilefields[$indexC]->shortname='firstnamephonetic';
+            }
+
+            if ($profilefields[$indexC]->shortname=='lastname'){
+                $profilefields[$indexC]->shortname='lastnamephonetic';
+            }
+
+        }
+        //**--------------------------------------------------------------------------------------*/
+
         foreach ($profilefields as $id => $field) {
             $myxls->write_string(0, $id, $field->fullname);
         }
