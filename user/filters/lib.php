@@ -220,6 +220,47 @@ class user_filtering {
             }
         }
 
+        //HAIFA-UNIVERSITY-CUSTOMIZATION Add new fields firstnamephonetic and lastnamephonetic 5_10_2017
+        $tmp_arr = array();
+        foreach($sqls as $key=>$sql){
+            $pos_firstname = preg_match('/firstname/',$sql);
+            $pos_lastname = preg_match('/lastname/',$sql);
+
+            if($pos_firstname && $pos_lastname){
+                $tmp_arr[] = array('place'=>$key, 'value'=>'ex_text'.$key, 'type'=>3);
+            }else{
+                if($pos_firstname){
+                    $tmp_arr[] = array('place'=>$key, 'value'=>'ex_text'.$key, 'type'=>1);
+                }
+                if($pos_lastname){
+                    $tmp_arr[] = array('place'=>$key, 'value'=>'ex_text'.$key, 'type'=>2);
+                }
+            }
+        }
+
+        $count = -1;
+        foreach($params as $par){
+            $count++;
+        }
+
+        foreach($tmp_arr as $item){
+            $count++;
+
+            if($item['type'] == 1){
+                $params['ex_text'.$count] = $params[$item['value']];
+                $sqls[$item['place']] = "(firstname LIKE :".$item['value']." OR firstnamephonetic LIKE :".'ex_text'.$count.") ";
+            }
+            if($item['type'] == 2){
+                $params['ex_text'.$count] = $params[$item['value']];
+                $sqls[$item['place']] = "(lastname LIKE :".$item['value']." OR lastnamephonetic LIKE :".'ex_text'.$count.") ";
+            }
+            if($item['type'] == 3){
+                $params['ex_text'.$count] = $params[$item['value']];
+                $sqls[$item['place']] = "(CONCAT(firstname, ' ', lastname) LIKE :".$item['value']." OR CONCAT(firstnamephonetic, ' ', lastnamephonetic) LIKE :".'ex_text'.$count.") ";
+            }
+        }
+        /////////////////////////////////////////////////////////////
+
         if (empty($sqls)) {
             return array('', array());
         } else {
