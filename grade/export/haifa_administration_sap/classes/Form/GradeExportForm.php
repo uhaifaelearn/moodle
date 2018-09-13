@@ -84,7 +84,6 @@ class GradeExportForm extends moodleform
             //Prepare data for select activities
             $options_mod = array();
             $options_mod_settings = array();
-            $options_mod[""]=get_string('grade_required', 'gradeexport_haifa_administration_sap');
             foreach ($gradeItems as $gradeItem) {
                 // Is the grade_item hidden? If so, can the user see hidden grade_items?
                 if ($gradeItem->is_hidden() && !$canViewHidden) {
@@ -100,7 +99,7 @@ class GradeExportForm extends moodleform
             
             $select1 = $mForm->addElement('select', 'itemids', get_string('grade_option2', 'gradeexport_haifa_administration_sap'), $options_mod);
             $select1->setMultiple(true);
-            $mForm->addRule('itemids', null, 'required');
+
             //$select1->setSelected($activity_default);
                         
             $options_grade = array(0 => get_string('No_pass_grade', 'gradeexport_haifa_administration_sap'));
@@ -120,6 +119,7 @@ class GradeExportForm extends moodleform
         $options = $this->getOptions();
 
         $mForm->addElement('select', 'grade_option', get_string('grade_option', 'gradeexport_haifa_administration_sap'), $options);
+        $mForm->addRule('grade_option', null, 'required');
 
         $mForm->addElement('hidden', 'export_onlyactive', 1);
         $mForm->setType('export_onlyactive', PARAM_BOOL);
@@ -165,8 +165,8 @@ class GradeExportForm extends moodleform
     private function getOptions($type = 'option')
     {
         $type = ($type ? '_' : $type) . $type;
-
         return [
+            "" => get_string('grade_required', 'gradeexport_haifa_administration_sap'),
             self::FINAL_PAPAER  => get_string('final_paper'.$type, 'gradeexport_haifa_administration_sap'),
             self::MOED_A        => get_string('moed_a'.$type, 'gradeexport_haifa_administration_sap'),
             self::MOED_B        => get_string('moed_b'.$type, 'gradeexport_haifa_administration_sap'),
