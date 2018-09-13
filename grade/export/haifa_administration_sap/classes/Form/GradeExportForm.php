@@ -100,7 +100,7 @@ class GradeExportForm extends moodleform
             
             $select1 = $mForm->addElement('select', 'itemids', get_string('grade_option2', 'gradeexport_haifa_administration_sap'), $options_mod);
             $select1->setMultiple(true);
-            $select1->addRule('itemids', null, 'required');
+            $mForm->addRule('itemids', null, 'required');
             //$select1->setSelected($activity_default);
                         
             $options_grade = array(0 => get_string('No_pass_grade', 'gradeexport_haifa_administration_sap'));
