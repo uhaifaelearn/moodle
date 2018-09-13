@@ -79,22 +79,27 @@ class GradeExport extends grade_export
         //$context = get_context_instance(CONTEXT_COURSE, $this->course->id); 
         $context = context_course::instance($this->course->id);
         
-        //Get course tag
-        $sql = "
-            SELECT t.* 
-            FROM {tag_instance} AS ti
-            LEFT JOIN {tag} AS t ON(ti.tagid=t.id)
-            WHERE ti.contextid=".$context->id."
-            LIMIT 1    
-        ";
-        
-        $obj_tag = $DB->get_record_sql($sql); 
-        
-        $tag_course = '';
-        if(!empty($obj_tag)){
-            $tag_course = $obj_tag->name;        
-        }
-        
+        //Get course tag old version
+//        $sql = "
+//            SELECT t.*
+//            FROM {tag_instance} AS ti
+//            LEFT JOIN {tag} AS t ON(ti.tagid=t.id)
+//            WHERE ti.contextid=".$context->id."
+//            LIMIT 1
+//        ";
+//
+//        $obj_tag = $DB->get_record_sql($sql);
+//
+//        $tag_course = '';
+//        if(!empty($obj_tag)){
+//            $tag_course = $obj_tag->name;
+//        }
+
+        $arrSapidAndEventID = explode("-", $this->course->idnumber);
+        $sapid=isset($arrSapidAndEventID[1])?$arrSapidAndEventID[1]:"";
+        $eventid=isset($arrSapidAndEventID[0])?$arrSapidAndEventID[0]:"";
+
+
         $role = $DB->get_record('role', array('shortname' => 'editingteacher'));
         $teachers = get_role_users($role->id, $context);
         $firstteacher=reset($teachers);
@@ -122,44 +127,44 @@ class GradeExport extends grade_export
 
         while ($userData = $gradedUsersIterator->next_user()) {
             $i++;
-            $user   = $userData->user;          
+            $user   = $userData->user;
             $obj_tmp = new stdClass();
-            
-            $obj_tmp->SM_Objid = $tag_course;
+
+            $obj_tmp->SM_Objid = $sapid;
           //  $obj_tmp->ST_Objid = str_pad($user->idnumber, 8, '0', STR_PAD_LEFT);
             //$obj_tmp->ST_Objid = '';
             $obj_tmp->Student12 = str_pad($user->idnumber, 12, '0', STR_PAD_LEFT);
-            $obj_tmp->Lecturer_ID = $teacher_id; 
-            
+            $obj_tmp->Lecturer_ID = $teacher_id;
+
             $obj_tmp_grade = array();
             foreach ($userData->grades as $itemId => $grade) {
                 $obj_grade = new stdClass();
                 foreach ($this->displaytype as $gradedIsPlayConst) {
                     $gradeStr   = $this->format_grade($grade, $gradedIsPlayConst);
-                    
+
                     $obj_grade->grade_id = $itemId;
                     $obj_grade->grade_value = $gradeStr;
                 }
-                
-                $obj_tmp_grade[] = $obj_grade;                             
+
+                $obj_tmp_grade[] = $obj_grade;
             }
-            
+
             $obj_tmp->grades = $obj_tmp_grade;
-            
+
             $result[] = $obj_tmp;
         }
 
         $gradedUsersIterator->close();
         $gradeExportUpdateBuffer->close();
-        
-        $result = $this->prepareDataForCsv($result,$grade_teacher); 
-        
+
+        $result = $this->prepareDataForCsv($result,$grade_teacher);
+
         //Export CSV
-        $shortname = format_string($this->course->shortname, true, ['context' => context_course::instance($this->course->id)]);        
+        $shortname = format_string($this->course->shortname, true, ['context' => context_course::instance($this->course->id)]);
         $arr_shortname = explode('-', $shortname);
         $year = date("Y");
         $moad = $grade_option==0?1:$grade_option;
-        $event = $this->course->idnumber;
+        $event = $eventid;
         $code = '0002';
         $date = date("Ymd");   ;
 
@@ -180,7 +185,7 @@ class GradeExport extends grade_export
         }
 
         //Name of filename
-        $filename = $tag_course.$year.$semestr.$moad.$event.'-'.$code.'-'.$date;
+        $filename = $sapid.$year.$semestr.$moad.$event.'-'.$code.'-'.$date;
 
         $downloadfilename = clean_filename ( $filename );
 
