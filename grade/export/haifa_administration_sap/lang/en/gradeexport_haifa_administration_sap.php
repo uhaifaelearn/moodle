@@ -97,3 +97,4 @@ $string['properties_company']           = 'אוניברסיטת חיפה';
 $string['No_pass_grade']           = 'No pass grade';
 $string['grade_option2']           = 'Grade for Reporting';
 $string['grade_option3']           = 'Grade';
+$string['grade_required']           = 'Please Select grade option';

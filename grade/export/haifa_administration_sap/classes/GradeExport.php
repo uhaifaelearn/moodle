@@ -164,7 +164,7 @@ class GradeExport extends grade_export
         $arr_shortname = explode('-', $shortname);
         $year = date("Y");
         $moad = $grade_option==0?1:$grade_option;
-        $event = $eventid;
+        $event = $this->course->idnumber;
         $code = '0002';
         $date = date("Ymd");   ;
 
