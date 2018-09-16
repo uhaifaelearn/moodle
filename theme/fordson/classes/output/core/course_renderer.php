@@ -137,6 +137,10 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                                 $imgurl = $noimgurl;
                             }
                         }
+                        if (!$course->visible) {
+                            $catcontent .= html_writer::tag('div', get_string('coursehidden'), ['class' => 'alert alert-danger']);
+                        }
+
                         if ($PAGE->theme->settings->coursetilestyle == 1) {
                             $rowcontent .= '
                         <div class="col-md-4">';
@@ -151,10 +155,6 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                             }
                             else {
                                 $tooltiptext = '';
-                            }
-
-                            if (!$course->visible) {
-                                $catcontent .= html_writer::tag('div', get_string('coursehidden'), ['class' => 'alert alert-danger']);
                             }
 
                             $rowcontent .= '
@@ -642,6 +642,11 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                                 $imgurl = $noimgurl;
                             }
                         }
+
+                        if (!$course->visible) {
+                            $catcontent .= html_writer::tag('div', get_string('coursehidden'), ['class' => 'alert alert-danger']);
+                        }
+
                         if ($PAGE->theme->settings->coursetilestyle == 1) {
                             $rowcontent .= '
                         <div class="col-md-4">';
@@ -656,9 +661,6 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                             }
                             else {
                                 $tooltiptext = '';
-                            }
-                            if (!$course->visible) {
-                                $catcontent .= html_writer::tag('div', get_string('coursehidden'), ['class' => 'alert alert-danger']);
                             }
                             
                             $rowcontent .= '
