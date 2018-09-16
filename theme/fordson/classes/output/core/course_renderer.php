@@ -152,6 +152,11 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                             else {
                                 $tooltiptext = '';
                             }
+
+                            if (!$course->visible) {
+                                $catcontent .= html_writer::tag('div', get_string('coursehidden'), ['class' => 'alert alert-danger']);
+                            }
+
                             $rowcontent .= '
                                     <a ' . $tooltiptext . ' href="' . $courseurl . '">
                                     <div class="courseimagecontainer">
