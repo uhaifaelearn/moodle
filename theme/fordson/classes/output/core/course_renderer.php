@@ -644,7 +644,7 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                         }
 
                         if (!$course->visible) {
-                            $catcontent .= html_writer::tag('div', get_string('coursehidden'), ['class' => 'alert alert-danger']);
+                            $summary .= html_writer::tag('div', get_string('coursehidden'), ['class' => 'alert alert-danger']);
                         }
 
                         if ($PAGE->theme->settings->coursetilestyle == 1) {
