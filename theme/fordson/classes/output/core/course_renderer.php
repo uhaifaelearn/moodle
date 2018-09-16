@@ -137,8 +137,10 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                                 $imgurl = $noimgurl;
                             }
                         }
+
+                        $alertmessage='';
                         if (!$course->visible) {
-                            $catcontent .= html_writer::tag('div', get_string('coursehidden'), ['class' => 'alert alert-danger']);
+                            $alertmessage = html_writer::tag('div', get_string('coursehidden'), ['class' => 'alert alert-danger']);
                         }
 
                         if ($PAGE->theme->settings->coursetilestyle == 1) {
@@ -172,7 +174,7 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                                     </div>
                                     </a>
                                     <div class="course-summary">
-                                    ' . $catcontent . '
+                                    ' . $alertmessage.$catcontent . '
                                     ';
                             
                             $rowcontent .= '
@@ -286,7 +288,7 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                                     </div>
                                     </a>
                                     <div class="course-summary4">
-                                    ' . $catcontent . '
+                                    ' . $alertmessage.$catcontent . '
                                     ' . $summary . '
                                     ';
                             if ($course->has_course_contacts()) {
@@ -344,7 +346,7 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                             $rowcontent .= '</div>';
                             $rowcontent .= '<div class="col-md-6">
                                     <div class="course-summary">
-                                    ' . $summary . '
+                                    ' . $alertmessage.$summary . '
                                     </div> 
                                     </div> ';
                             $rowcontent .= html_writer::end_tag('div');
@@ -391,7 +393,7 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                             }
                             $rowcontent .= '<div class="col-md-6">
                                     <div class="course-summary">
-                                    ' . $summary . '
+                                    ' . $alertmessage.$summary . '
                                     </div> 
                                     </div> </div></div>';
                             $rowcontent .= '
@@ -461,7 +463,7 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                                     ' . $catcontent . '
                                     </div>
                                     <div class="course-summary-2col">
-                                    ' . $summary . '
+                                    ' . $alertmessage.$summary . '
                                     </div>
                                     </div>
                                     </a>
@@ -485,7 +487,7 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                                 <div class="col-md-6">
                             	<h4><a href="' . $courseurl . '">' . $trimtitle . '</a></h4>
                                 <div class="course-summary">
-	                                    ' . $summary . '
+	                                    ' . $alertmessage.$summary . '
 	                            </div>
 	                            </div>';
                             $rowcontent .= ' 
@@ -643,8 +645,9 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                             }
                         }
 
+                        $alertmessage='';
                         if (!$course->visible) {
-                            $summary .= html_writer::tag('div', get_string('coursehidden'), ['class' => 'alert alert-danger']);
+                            $alertmessage = html_writer::tag('div', get_string('coursehidden'), ['class' => 'alert alert-danger']);
                         }
 
                         if ($PAGE->theme->settings->coursetilestyle == 1) {
@@ -679,7 +682,7 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                                     </div>
                                     </a>
                                     <div class="course-summary">
-                                    ' . $catcontent . '
+                                    ' . $alertmessage.$catcontent . '
                                     ';
 
                             $rowcontent .= '
@@ -798,7 +801,7 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                                     </div>
                                     </a>
                                     <div class="course-summary4">
-                                    ' . $catcontent . '
+                                    ' . $alertmessage.$catcontent . '
                                     ' . $summary . '
                                     ';
                             if ($course->has_course_contacts()) {
@@ -856,7 +859,7 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                             $rowcontent .= '</div>';
                             $rowcontent .= '<div class="col-md-6">
                                     <div class="course-summary">
-                                    ' . $catcontent . '
+                                    ' . $alertmessage.$catcontent . '
                                     ' . $summary . '
                                     </div> 
                                     </div> ';
@@ -901,7 +904,7 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                             }
                             $rowcontent .= '<div class="col-md-6">
                                     <div class="course-summary">
-                                    ' . $summary . '
+                                    ' . $alertmessage.$summary . '
                                     </div> 
                                     </div> </div></div>';
                             $rowcontent .= '
@@ -974,7 +977,7 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                                     ' . $catcontent . '
                                     </div>
                                     <div class="course-summary-2col">
-                                    ' . $summary . '
+                                    ' . $alertmessage.$summary . '
                                     </div>
                                     </div>
                                     </a>
@@ -998,7 +1001,7 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                             	<h4><a href="' . $courseurl . '">' . $trimtitle . '</a></h4>';
                             if ($systemcontext !== 'page-site-index') {
                             	$rowcontent .= '<div class="course-summary">
-	                                    ' . $summary . '
+	                                    ' . $alertmessage.$summary . '
 	                            </div>';
                             }
 	                        $rowcontent .= '</div>';
