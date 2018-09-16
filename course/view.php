@@ -261,7 +261,7 @@
 
     /* HAIFA-UNIVERSITY-CUSTOMIZATION message for lecturer about invisible course */
     if (!$course->visible) {
-        echo html_writer::start_tag('div', ['class' => 'alert','style'=>'color:red !important;']);
+        echo html_writer::start_tag('div', ['class' => 'alert alert-danger','style'=>'color:red !important;']);
         echo get_string('coursehidden').': ';
         echo html_writer::link(new moodle_url('http://online.haifa.ac.il/nsite/mdl_guides/open_course_to_students_mdl.pdf'), get_string('supportpage', 'admin'), ['target' => '_blank']);
         echo html_writer::end_tag('div');

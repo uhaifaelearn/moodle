@@ -1263,7 +1263,7 @@ class core_course_renderer extends plugin_renderer_base {
         /* HAIFA-UNIVERSITY-CUSTOMIZATION message for lecturer about invisible course */
         if (!$course->visible) {
             $content .= html_writer::start_tag('div', ['class' => 'content']);
-            $content .= html_writer::tag('div', get_string('coursehidden'), ['class' => 'alert']);
+            $content .= html_writer::tag('div', get_string('coursehidden'), ['class' => 'alert alert-danger']);
             $content .= html_writer::end_tag('div'); // .content
         }
         /* message for lecturer & students about invisible course */
