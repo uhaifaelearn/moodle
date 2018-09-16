@@ -1231,6 +1231,11 @@ class core_renderer extends \theme_boost\output\core_renderer {
         $eventmonitoringlink = new moodle_url('/admin/tool/monitor/managerules.php', array(
             'courseid' => $PAGE->course->id
         ));
+
+        $localbackupprovidertitle = get_string('import', 'local_remote_backup_provider');
+        $localbackupproviderlink = new moodle_url('/local/remote_backup_provider/index.php',
+            array('id' => $PAGE->course->id)
+        );
         // Student Dash.
         if (\core_completion\progress::get_course_progress_percentage($PAGE->course)) {
             $comppc = \core_completion\progress::get_course_progress_percentage($PAGE->course);
@@ -1463,6 +1468,11 @@ class core_renderer extends \theme_boost\output\core_renderer {
                 'hascoursemanagelinks' => $eventmonitoringtitle,
                 'title' => $eventmonitoringtitle,
                 'url' => $eventmonitoringlink
+            ) ,
+            array(
+                'hascoursemanagelinks' => $localbackupprovidertitle,
+                'title' => $localbackupprovidertitle,
+                'url' => $localbackupproviderlink
             ) ,
             array(
                 'hasbadgelinks' => $badgemanagetitle,
