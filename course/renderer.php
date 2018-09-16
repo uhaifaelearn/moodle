@@ -1259,6 +1259,15 @@ class core_course_renderer extends plugin_renderer_base {
             $content .= html_writer::end_tag('ul'); // .teachers
         }
 
+
+        /* HAIFA-UNIVERSITY-CUSTOMIZATION message for lecturer about invisible course */
+        if (!$course->visible) {
+            $content .= html_writer::start_tag('div', ['class' => 'content']);
+            $content .= html_writer::tag('div', get_string('coursehidden'), ['class' => 'alert']);
+            $content .= html_writer::end_tag('div'); // .content
+        }
+        /* message for lecturer & students about invisible course */
+
         // display course category if necessary (for example in search results)
         if ($chelper->get_show_courses() == self::COURSECAT_SHOW_COURSES_EXPANDED_WITH_CAT) {
             require_once($CFG->libdir. '/coursecatlib.php');
