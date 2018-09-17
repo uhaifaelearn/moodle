@@ -216,7 +216,10 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                                 ));
                                 foreach ($course->get_course_contacts() as $userid => $coursecontact) {
                                     $name = $coursecontact['rolename'] . ': ' . $coursecontact['username'];
-                                    $rowcontent .= html_writer::tag('li', $name);
+                                    $namelink =  html_writer::link(new moodle_url('/user/view.php',
+                                        array('id' => $userid)),
+                                        $name);
+                                    $rowcontent .= html_writer::tag('li', $namelink);
                                 }
                                 $rowcontent .= html_writer::end_tag('ul');
                             }
