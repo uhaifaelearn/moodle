@@ -215,11 +215,10 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                                     'class' => 'teacherscourseview'
                                 ));
                                 foreach ($course->get_course_contacts() as $userid => $coursecontact) {
-                                    $name = $coursecontact['rolename'] . ': ' . $coursecontact['username'];
-                                    $namelink =  html_writer::link(new moodle_url('/user/view.php',
-                                        array('id' => $userid)),
-                                        $name);
-                                    $rowcontent .= html_writer::tag('li', $namelink);
+                                    $name = $coursecontact['rolename'] . ': ' . html_writer::link(new moodle_url('/user/view.php',
+                                            array('id' => $userid)),
+                                            $coursecontact['username']);
+                                    $rowcontent .= html_writer::tag('li', $name);
                                 }
                                 $rowcontent .= html_writer::end_tag('ul');
                             }
@@ -299,10 +298,10 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                                     'class' => 'teacherscourseview'
                                 ));
                                 foreach ($course->get_course_contacts() as $userid => $coursecontact) {
-                                    $namelink =  html_writer::link(new moodle_url('/user/view.php',
-                                        array('id' => $userid)),
-                                        $name);
-                                    $rowcontent .= html_writer::tag('li', $namelink);
+                                    $name = $coursecontact['rolename'] . ': ' . html_writer::link(new moodle_url('/user/view.php',
+                                            array('id' => $userid)),
+                                            $coursecontact['username']);
+                                    $rowcontent .= html_writer::tag('li', $name);
                                 }
                                 $rowcontent .= html_writer::end_tag('ul'); // .teachers
                                 
@@ -343,10 +342,10 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                                     'class' => 'teacherscourseview'
                                 ));
                                 foreach ($course->get_course_contacts() as $userid => $coursecontact) {
-                                    $namelink =  html_writer::link(new moodle_url('/user/view.php',
-                                        array('id' => $userid)),
-                                        $name);
-                                    $rowcontent .= html_writer::tag('li', $namelink);
+                                    $name = $coursecontact['rolename'] . ': ' . html_writer::link(new moodle_url('/user/view.php',
+                                            array('id' => $userid)),
+                                            $coursecontact['username']);
+                                    $rowcontent .= html_writer::tag('li', $name);
                                 }
                                 $rowcontent .= html_writer::end_tag('ul');
                             }
@@ -392,10 +391,10 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                                     'class' => 'teacherscourseview'
                                 ));
                                 foreach ($course->get_course_contacts() as $userid => $coursecontact) {
-                                    $namelink =  html_writer::link(new moodle_url('/user/view.php',
-                                        array('id' => $userid)),
-                                        $name);
-                                    $rowcontent .= html_writer::tag('li', $namelink);
+                                    $name = $coursecontact['rolename'] . ': ' . html_writer::link(new moodle_url('/user/view.php',
+                                            array('id' => $userid)),
+                                            $coursecontact['username']);
+                                    $rowcontent .= html_writer::tag('li', $name);
                                 }
                                 $rowcontent .= html_writer::end_tag('ul');
                                 $rowcontent .= '</div>';
@@ -438,10 +437,10 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                                     'class' => 'teacherscourseview'
                                 ));
                                 foreach ($course->get_course_contacts() as $userid => $coursecontact) {
-                                    $namelink =  html_writer::link(new moodle_url('/user/view.php',
-                                        array('id' => $userid)),
-                                        $name);
-                                    $rowcontent .= html_writer::tag('li', $namelink);
+                                    $name = $coursecontact['rolename'] . ': ' . html_writer::link(new moodle_url('/user/view.php',
+                                            array('id' => $userid)),
+                                            $coursecontact['username']);
+                                    $rowcontent .= html_writer::tag('li', $name);
                                 }
                                 $rowcontent .= html_writer::end_tag('ul');
                                 $rowcontent .= '</div>';
@@ -512,10 +511,10 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                                     'class' => 'teacherscourseview'
                                 ));
                                 foreach ($course->get_course_contacts() as $userid => $coursecontact) {
-                                    $namelink =  html_writer::link(new moodle_url('/user/view.php',
-                                        array('id' => $userid)),
-                                        $name);
-                                    $rowcontent .= html_writer::tag('li', $namelink);
+                                    $name = $coursecontact['rolename'] . ': ' . html_writer::link(new moodle_url('/user/view.php',
+                                            array('id' => $userid)),
+                                            $coursecontact['username']);
+                                    $rowcontent .= html_writer::tag('li', $name);
                                 }
                                 $rowcontent .= html_writer::end_tag('ul');
                             }
@@ -737,10 +736,10 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                                     'class' => 'teacherscourseview'
                                 ));
                                 foreach ($course->get_course_contacts() as $userid => $coursecontact) {
-                                    $namelink =  html_writer::link(new moodle_url('/user/view.php',
-                                        array('id' => $userid)),
-                                        $name);
-                                    $rowcontent .= html_writer::tag('li', $namelink);
+                                    $name = $coursecontact['rolename'] . ': ' . html_writer::link(new moodle_url('/user/view.php',
+                                            array('id' => $userid)),
+                                            $coursecontact['username']);
+                                    $rowcontent .= html_writer::tag('li', $name);
                                 }
                                 $rowcontent .= html_writer::end_tag('ul');
                             }
@@ -824,10 +823,10 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                                     'class' => 'teacherscourseview'
                                 ));
                                 foreach ($course->get_course_contacts() as $userid => $coursecontact) {
-                                    $namelink =  html_writer::link(new moodle_url('/user/view.php',
-                                        array('id' => $userid)),
-                                        $name);
-                                    $rowcontent .= html_writer::tag('li', $namelink);
+                                    $name = $coursecontact['rolename'] . ': ' . html_writer::link(new moodle_url('/user/view.php',
+                                            array('id' => $userid)),
+                                            $coursecontact['username']);
+                                    $rowcontent .= html_writer::tag('li', $name);
                                 }
                                 $rowcontent .= html_writer::end_tag('ul');
                             }
@@ -868,10 +867,10 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                                     'class' => 'teacherscourseview'
                                 ));
                                 foreach ($course->get_course_contacts() as $userid => $coursecontact) {
-                                    $namelink =  html_writer::link(new moodle_url('/user/view.php',
-                                        array('id' => $userid)),
-                                        $name);
-                                    $rowcontent .= html_writer::tag('li', $namelink);
+                                    $name = $coursecontact['rolename'] . ': ' . html_writer::link(new moodle_url('/user/view.php',
+                                            array('id' => $userid)),
+                                            $coursecontact['username']);
+                                    $rowcontent .= html_writer::tag('li', $name);
                                 }
                                 $rowcontent .= html_writer::end_tag('ul');
                             }
@@ -915,10 +914,10 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                                     'class' => 'teacherscourseview'
                                 ));
                                 foreach ($course->get_course_contacts() as $userid => $coursecontact) {
-                                    $namelink =  html_writer::link(new moodle_url('/user/view.php',
-                                        array('id' => $userid)),
-                                        $name);
-                                    $rowcontent .= html_writer::tag('li', $namelink);
+                                    $name = $coursecontact['rolename'] . ': ' .html_writer::link(new moodle_url('/user/view.php',
+                                            array('id' => $userid)),
+                                            $coursecontact['username']);
+                                    $rowcontent .= html_writer::tag('li', $name);
                                 }
                                 $rowcontent .= html_writer::end_tag('ul');
                                 $rowcontent .= '</div>';
@@ -962,11 +961,10 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                                     'class' => 'teacherscourseview'
                                 ));
                                 foreach ($course->get_course_contacts() as $userid => $coursecontact) {
-                                    $name = $coursecontact['rolename'] . ': ' . $coursecontact['username'];
-                                    $namelink =  html_writer::link(new moodle_url('/user/view.php',
-                                        array('id' => $userid)),
-                                        $name);
-                                    $rowcontent .= html_writer::tag('li', $namelink);
+                                    $name = $coursecontact['rolename'] . ': ' . html_writer::link(new moodle_url('/user/view.php',
+                                            array('id' => $userid)),
+                                            $coursecontact['username']);
+                                    $rowcontent .= html_writer::tag('li', $name);
                                 }
                                 $rowcontent .= html_writer::end_tag('ul');
                                 $rowcontent .= '</div>';
@@ -1041,11 +1039,10 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
 		                                    'class' => 'teacherscourseview'
 		                                ));
 		                                foreach ($course->get_course_contacts() as $userid => $coursecontact) {
-		                                    $name = $coursecontact['rolename'] . ': ' . $coursecontact['username'];
-                                            $namelink =  html_writer::link(new moodle_url('/user/view.php',
-                                                array('id' => $userid)),
-                                                $name);
-		                                    $rowcontent .= html_writer::tag('li', $namelink);
+		                                    $name = $coursecontact['rolename'] . ': ' . html_writer::link(new moodle_url('/user/view.php',
+                                                    array('id' => $userid)),
+                                                    $coursecontact['username']);
+		                                    $rowcontent .= html_writer::tag('li', $name);
 		                                }
 		                                $rowcontent .= html_writer::end_tag('ul');
 		                            }
