@@ -1021,7 +1021,7 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                             $rowcontent .= '
                                 <div class="col-md-6">
                             	<h4><a href="' . $courseurl . '">' . $trimtitle . '</a></h4>';
-                            if ($systemcontext !== 'page-site-index') {
+                            if ($systemcontext == 'page-site-index') {
                             	$rowcontent .= '<div class="course-summary">
 	                                    ' . $alertmessage.$summary . '
 	                            </div>';
