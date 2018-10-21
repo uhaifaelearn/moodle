@@ -1334,6 +1334,12 @@ function user_get_participants_sql($courseid, $groupid = 0, $accesssince = 0, $r
             $conditions = array();
             // Search by fullname.
             $fullname = $DB->sql_fullname('u.firstname', 'u.lastname');
+
+            //HAIFA-UNIVERSITY-CUSTOMIZATION Add new fields firstnamephonetic and lastnamephonetic 5_10_2017
+            $fullnamephonetic = $DB->sql_fullname('u.firstnamephonetic', 'u.lastnamephonetic');
+            $fullname = $DB->sql_fullname($fullname, $fullnamephonetic);
+            //HAIFA-UNIVERSITY-CUSTOMIZATION Add new fields firstnamephonetic and lastnamephonetic 5_10_2017
+
             $conditions[] = $DB->sql_like($fullname, ':' . $searchkey1, false, false);
 
             // Search by email.
