@@ -260,7 +260,7 @@ function user_get_user_details($user, $course = null, array $userfields = array(
     require_once($CFG->dirroot . "/user/profile/lib.php"); // Custom field library.
     require_once($CFG->dirroot . "/lib/filelib.php");      // File handling on description and friends.
 
-    $defaultfields = user_get_defget_sql_filterault_fields();
+    $defaultfields = user_get_default_fields();
 
     if (empty($userfields)) {
         $userfields = $defaultfields;
@@ -1334,12 +1334,6 @@ function user_get_participants_sql($courseid, $groupid = 0, $accesssince = 0, $r
             $conditions = array();
             // Search by fullname.
             $fullname = $DB->sql_fullname('u.firstname', 'u.lastname');
-
-            //HAIFA-UNIVERSITY-CUSTOMIZATION Add new fields firstnamephonetic and lastnamephonetic 5_10_2017
-            $fullnamephonetic = $DB->sql_fullname('u.firstnamephonetic', 'u.lastnamephonetic');
-            $fullname = $DB->sql_fullname($fullname, $fullnamephonetic);
-            //HAIFA-UNIVERSITY-CUSTOMIZATION Add new fields firstnamephonetic and lastnamephonetic 5_10_2017
-
             $conditions[] = $DB->sql_like($fullname, ':' . $searchkey1, false, false);
 
             // Search by email.
