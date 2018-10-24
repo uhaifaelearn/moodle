@@ -677,16 +677,12 @@ class flexible_table {
             $i++;
 
             if (!empty($this->prefs['i_first'])) {
-
-                $conditions[] = $DB->sql_like('firstname', ':ifirstc'.$i, false, false)." OR ".$DB->sql_like('firstnamephonetic', ':ifirstnamephonetic'.$i, false, false);// $conditions[] = $DB->sql_like('firstnamephonetic', ':ifirstnamephonetic'.$i, false, false);
-                $params['ifirstnamephonetic'.$i] = $this->prefs['i_first'].'%';
+                $conditions[] = $DB->sql_like('firstname', ':ifirstc'.$i, false, false);
                 $params['ifirstc'.$i] = $this->prefs['i_first'].'%';
-
             }
             if (!empty($this->prefs['i_last'])) {
-                $conditions[] = $DB->sql_like('lastname', ':ilastc'.$i, false, false)." OR ".$DB->sql_like('lastnamephonetic', ':ilastnamephonetic'.$i, false, false);
+                $conditions[] = $DB->sql_like('lastname', ':ilastc'.$i, false, false);
                 $params['ilastc'.$i] = $this->prefs['i_last'].'%';
-                $params['ilastnamephonetic'.$i] = $this->prefs['i_last'].'%';
             }
 
         }
