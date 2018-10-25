@@ -433,7 +433,7 @@ class participants_table extends \table_sql {
      * @param bool $useinitialsbar do you want to use the initials bar.
      */
     public function query_db($pagesize, $useinitialsbar = true) {
-        list($twhere, $tparams) = $this->get_sql_where();
+        list($twhere, $tparams) = $this->get_sql_where_phonetic();
 
         $total = user_get_total_participants($this->course->id, $this->currentgroup, $this->accesssince,
             $this->roleid, $this->enrolid, $this->status, $this->search, $twhere, $tparams);

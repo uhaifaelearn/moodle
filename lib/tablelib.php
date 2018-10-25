@@ -691,6 +691,35 @@ class flexible_table {
     }
 
     /**
+     * @return string sql to add to where statement.
+     */
+    function get_sql_where_phonetic() {
+        global $DB;
+
+        $conditions = array();
+        $params = array();
+
+        if (isset($this->columns['fullname'])) {
+            static $i = 0;
+            $i++;
+
+            if (!empty($this->prefs['i_first'])) {
+                $conditions[] = $DB->sql_like('firstname', ':ifirstc'.$i, false, false)." OR ".$DB->sql_like('firstnamephonetic', ':ifirstnamephonetic'.$i, false, false);
+                $params['ifirstc'.$i] = $this->prefs['i_first'].'%';
+                $params['ifirstnamephonetic'.$i] = $this->prefs['i_first'].'%';
+            }
+            if (!empty($this->prefs['i_last'])) {
+                $conditions[] = $DB->sql_like('lastname', ':ilastc'.$i, false, false)." OR ".$DB->sql_like('lastnamephonetic', ':ilastnamephonetic'.$i, false, false);
+                $params['ilastc'.$i] = $this->prefs['i_last'].'%';
+                $params['ilastnamephonetic'.$i] = $this->prefs['i_last'].'%';
+            }
+
+        }
+
+        return array(implode(" AND ", $conditions), $params);
+    }
+
+    /**
      * Add a row of data to the table. This function takes an array or object with
      * column names as keys or property names.
      *
