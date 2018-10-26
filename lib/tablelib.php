@@ -1591,7 +1591,7 @@ class table_sql extends flexible_table {
      * will only be used if there is a fullname column defined for the table.
      */
     function query_db($pagesize, $useinitialsbar=true) {
-        global $DB;
+        global $DB, $PAGE;
         if (!$this->is_downloading()) {
             if ($this->countsql === NULL) {
                 $this->countsql = 'SELECT COUNT(1) FROM '.$this->sql->from.' WHERE '.$this->sql->where;
@@ -1602,7 +1602,8 @@ class table_sql extends flexible_table {
                 $this->initialbars($grandtotal > $pagesize);
             }
 
-            list($wsql, $wparams) = $this->get_sql_where();
+            list($wsql, $wparams) = $PAGE->pagetype == 'mod-assign-grading' ? $this->get_sql_where_phonetic() : $this->get_sql_where();
+
             if ($wsql) {
                 $this->countsql .= ' AND '.$wsql;
                 $this->countparams = array_merge($this->countparams, $wparams);
