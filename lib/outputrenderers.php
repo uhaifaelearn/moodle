@@ -2496,12 +2496,13 @@ class core_renderer extends renderer_base {
         global $CFG, $DB;
 
         $user = $userpicture->user;
+        $canviewfullnames = has_capability('moodle/site:viewfullnames', context_system::instance());
 
         if ($userpicture->alttext) {
             if (!empty($user->imagealt)) {
                 $alt = $user->imagealt;
             } else {
-                $alt = get_string('pictureof', '', fullname($user));
+                $alt = get_string('pictureof', '', fullname($user, $canviewfullnames));
             }
         } else {
             $alt = '';
@@ -2533,7 +2534,7 @@ class core_renderer extends renderer_base {
 
         // Show fullname together with the picture when desired.
         if ($userpicture->includefullname) {
-            $output .= fullname($userpicture->user);
+            $output .= fullname($userpicture->user, $canviewfullnames);
         }
 
         // then wrap it in link if needed
@@ -3417,6 +3418,7 @@ EOD;
         $am->set_menu_trigger(
             $returnstr
         );
+        $am->set_action_label(get_string('usermenu'));
         $am->set_alignment(action_menu::TR, action_menu::BR);
         $am->set_nowrap_on_items();
         if ($withlinks) {

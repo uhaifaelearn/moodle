@@ -687,6 +687,15 @@ class navigation_node implements renderable {
     }
 
     /**
+     * Used to easily determine if this link in the breadcrumbs is hidden.
+     *
+     * @return boolean
+     */
+    public function is_hidden() {
+        return $this->hidden;
+    }
+
+    /**
      * Gets the CSS class to add to this node to describe its type
      *
      * @return string
@@ -2730,7 +2739,12 @@ class global_navigation extends navigation_node {
         }
         if ($navoptions->grades) {
             $url = new moodle_url('/grade/report/index.php', array('id'=>$course->id));
-            $gradenode = $coursenode->add(get_string('grades'), $url, self::TYPE_SETTING, null, 'grades', new pix_icon('i/grades', ''));
+            $gradenode = $coursenode->add(get_string('grades'), $url, self::TYPE_SETTING, null,
+                'grades', new pix_icon('i/grades', ''));
+            // If the page type matches the grade part, then make the nav drawer grade node (incl. all sub pages) active.
+            if ($this->page->context->contextlevel < CONTEXT_MODULE && strpos($this->page->pagetype, 'grade-') === 0) {
+                $gradenode->make_active();
+            }
         }
 
         return true;

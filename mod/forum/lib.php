@@ -2660,7 +2660,7 @@ function forum_get_discussions($cm, $forumsort="", $fullpost=true, $unused=-1, $
         $forumsort = forum_get_default_sort_order();
     }
     if (empty($fullpost)) {
-        $postdata = "p.id,p.subject,p.modified,p.discussion,p.userid";
+        $postdata = "p.id, p.subject, p.modified, p.discussion, p.userid, p.created";
     } else {
         $postdata = "p.*";
     }
@@ -2681,8 +2681,8 @@ function forum_get_discussions($cm, $forumsort="", $fullpost=true, $unused=-1, $
     }
 
     $allnames = get_all_user_name_fields(true, 'u');
-    $sql = "SELECT $postdata, d.name, d.timemodified, d.usermodified, d.groupid, d.timestart, d.timeend, d.pinned, $allnames,
-                   u.email, u.picture, u.imagealt $umfields
+    $sql = "SELECT $postdata, d.name, d.timemodified, d.usermodified, d.groupid, d.timestart, d.timeend, d.pinned,
+                   $allnames, u.email, u.picture, u.imagealt $umfields
               FROM {forum_discussions} d
                    JOIN {forum_posts} p ON p.discussion = d.id
                    JOIN {user} u ON p.userid = u.id
@@ -3051,6 +3051,7 @@ function forum_get_course_forum($courseid, $type) {
         case "news":
             $forum->name  = get_string("namenews", "forum");
             $forum->intro = get_string("intronews", "forum");
+            $forum->introformat = FORMAT_HTML;
             $forum->forcesubscribe = FORUM_FORCESUBSCRIBE;
             $forum->assessed = 0;
             if ($courseid == SITEID) {
@@ -3061,12 +3062,14 @@ function forum_get_course_forum($courseid, $type) {
         case "social":
             $forum->name  = get_string("namesocial", "forum");
             $forum->intro = get_string("introsocial", "forum");
+            $forum->introformat = FORMAT_HTML;
             $forum->assessed = 0;
             $forum->forcesubscribe = 0;
             break;
         case "blog":
             $forum->name = get_string('blogforum', 'forum');
             $forum->intro = get_string('introblog', 'forum');
+            $forum->introformat = FORMAT_HTML;
             $forum->assessed = 0;
             $forum->forcesubscribe = 0;
             break;
@@ -3463,10 +3466,10 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
     $output .= html_writer::div($postsubject, 'subject', ['role' => 'heading', 'aria-level' => '2']);
 
     if ($authorhidden) {
-        $bytext = userdate($post->modified);
+        $bytext = userdate($post->created);
     } else {
         $by = new stdClass();
-        $by->date = userdate($post->modified);
+        $by->date = userdate($post->created);
         $by->name = html_writer::link($postuser->profilelink, $postuser->fullname);
         $bytext = get_string('bynameondate', 'forum', $by);
     }
@@ -3819,6 +3822,7 @@ function forum_print_discussion_header(&$post, $forum, $group = -1, $datestring 
 
     $post->subject = format_string($post->subject,true);
 
+    $canviewfullnames = has_capability('moodle/site:viewfullnames', $modcontext);
     $timeddiscussion = !empty($CFG->forum_enabletimedposts) && ($post->timestart || $post->timeend);
     $timedoutsidewindow = '';
     if ($timeddiscussion && ($post->timestart > time() || ($post->timeend != 0 && $post->timeend < time()))) {
@@ -3856,7 +3860,7 @@ function forum_print_discussion_header(&$post, $forum, $group = -1, $datestring 
     echo '</span>';
     // User name
     echo '<div class="media-body">';
-    $fullname = fullname($postuser, has_capability('moodle/site:viewfullnames', $modcontext));
+    $fullname = fullname($postuser, $canviewfullnames);
     echo '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$post->userid.'&amp;course='.$forum->course.'">'.$fullname.'</a>';
     echo '</div>';
     echo '</div>';
@@ -3915,7 +3919,7 @@ function forum_print_discussion_header(&$post, $forum, $group = -1, $datestring 
     }
 
     echo '<td class="lastpost">';
-    $usedate = (empty($post->timemodified)) ? $post->modified : $post->timemodified;  // Just in case
+    $usedate = (empty($post->created)) ? $post->timemodified : $post->created;
     $parenturl = '';
     $usermodified = new stdClass();
     $usermodified->id = $post->usermodified;
@@ -3924,7 +3928,7 @@ function forum_print_discussion_header(&$post, $forum, $group = -1, $datestring 
     // In QA forums we check that the user can view participants.
     if ($forum->type !== 'qanda' || $canviewparticipants) {
         echo '<a href="'.$CFG->wwwroot.'/user/view.php?id='.$post->usermodified.'&amp;course='.$forum->course.'">'.
-             fullname($usermodified).'</a><br />';
+             fullname($usermodified, $canviewfullnames).'</a><br />';
         $parenturl = (empty($post->lastpostid)) ? '' : '&amp;parent='.$post->lastpostid;
     }
 
@@ -5589,7 +5593,7 @@ function forum_print_latest_discussions($course, $forum, $maxdiscussions = -1, $
 
     if ($displayformat == 'header') {
         echo '<table cellspacing="0" class="forumheaderlist">';
-        echo '<thead>';
+        echo '<thead class="text-left">';
         echo '<tr>';
         echo '<th class="header topic" scope="col">'.get_string('discussion', 'forum').'</th>';
         echo '<th class="header author" scope="col">'.get_string('startedby', 'forum').'</th>';
@@ -8330,22 +8334,34 @@ function mod_forum_core_calendar_event_action_shows_item_count(calendar_event $e
  *
  * @param calendar_event $event
  * @param \core_calendar\action_factory $factory
+ * @param int $userid User id to use for all capability checks, etc. Set to 0 for current user (default).
  * @return \core_calendar\local\event\entities\action_interface|null
  */
 function mod_forum_core_calendar_provide_event_action(calendar_event $event,
-                                                       \core_calendar\action_factory $factory) {
+                                                      \core_calendar\action_factory $factory,
+                                                      int $userid = 0) {
     global $DB, $USER;
 
-    $cm = get_fast_modinfo($event->courseid)->instances['forum'][$event->instance];
+    if (!$userid) {
+        $userid = $USER->id;
+    }
+
+    $cm = get_fast_modinfo($event->courseid, $userid)->instances['forum'][$event->instance];
+
+    if (!$cm->uservisible) {
+        // The module is not visible to the user for any reason.
+        return null;
+    }
+
     $context = context_module::instance($cm->id);
 
-    if (!has_capability('mod/forum:viewdiscussion', $context)) {
+    if (!has_capability('mod/forum:viewdiscussion', $context, $userid)) {
         return null;
     }
 
     $completion = new \completion_info($cm->get_course());
 
-    $completiondata = $completion->get_data($cm, false);
+    $completiondata = $completion->get_data($cm, false, $userid);
 
     if ($completiondata->completionstate != COMPLETION_INCOMPLETE) {
         return null;
@@ -8362,10 +8378,10 @@ function mod_forum_core_calendar_provide_event_action(calendar_event $event,
                     INNER JOIN {forum_discussions} fd ON fp.discussion=fd.id
                  WHERE
                     fp.userid=:userid AND fd.forum=:forumid";
-    $postcountparams = array('userid' => $USER->id, 'forumid' => $forum->id);
+    $postcountparams = array('userid' => $userid, 'forumid' => $forum->id);
 
     if ($forum->completiondiscussions) {
-        $count = $DB->count_records('forum_discussions', array('forum' => $forum->id, 'userid' => $USER->id));
+        $count = $DB->count_records('forum_discussions', array('forum' => $forum->id, 'userid' => $userid));
         $itemcount += ($forum->completiondiscussions >= $count) ? ($forum->completiondiscussions - $count) : 0;
     }
 
