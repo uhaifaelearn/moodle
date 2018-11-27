@@ -139,25 +139,26 @@ div#fordsonlogin {
 
 #page-login-index #page-wrapper {
     padding-bottom: 0;
+    min-height: 100%;
 }
 
 /* Editing Block Columns */
 
 .editing aside#block-region-fp-a {
     border: 2px dashed $gray-lighter;
-    min-height: 2rem;
+    min-height: 10rem;
 }
 .editing aside#block-region-fp-b {
     border: 2px dashed $gray-lighter;
-    min-height: 2rem;
+    min-height: 10rem;
 }
 .editing aside#block-region-fp-c {
     border: 2px dashed $gray-lighter;
-    min-height: 2rem;
+    min-height: 10rem;
 }
 .editing aside#block-region-side-pre {
     border: 2px dashed $gray-lighter;
-    min-height: 2rem;
+    min-height: 10rem;
 }
 
 /* Teacher Dashboard */
@@ -965,6 +966,22 @@ width: $activityiconsize;
     color: initial;
 }
 
+// MISTAR SIS Grade Export Page
+.export-group {
+    background-color: $gray-100;
+    padding: 1rem;
+    margin-bottom: 2rem;
+    border: 1px solid $gray-200;
+    border-top: 7px solid $spectrum-base;
+}
+
+.export-group .col-md-3 label {
+    font-weight: bold;
+}
+
+.export-group .form-group.row.fitem:first-child {
+    border-bottom: 1px solid $gray-300;
+}
 
 //Dashboard no progress icon centered fix
 
@@ -1109,6 +1126,10 @@ div#page.container-fluid {
         padding: 0;
         content: "";
     }
+    .dir-rtl ul.breadcrumb li:after{
+        transform: scale(.707) rotate(315deg);
+        box-shadow: -3px -3px 0 1px $card-bg, -2px -3px 0 2px $card-bg;
+    }
 }
 
 @media screen and (max-width: 576px) {
@@ -1128,10 +1149,6 @@ ul.ctopics {
 * Media Plugin Styling
 **/
 
-.path-course-view .mediaplugin, .path-course-view .mediaplugin video { 
-    max-width: 400px;
-}
-
 .path-course-view .video-js.vjs-audio {
     width: 400px;
 }
@@ -1150,3 +1167,10 @@ audio.mediaplugin_html5audio {
     position: initial;
 }
 
+// Navbar Color switch
+nav.fixed-top.navbar.navbar-teacher.navbar-expand.moodle-has-zindex {
+    background-color: $teachernavbarcolor;
+}
+nav.fixed-top.navbar.navbar-student.navbar-expand.moodle-has-zindex {
+    background-color: $studentnavbarcolor;
+}

@@ -6,8 +6,6 @@ THEME_Fordson
 Fordson is focused on students going from login to learning, with features that help teachers build better courses and students engage with content. Your school is unique and Fordson provides impressive customizations for a professional and modern learning platform. 
 It is built on Boostrap4 and Mustache templates.
 
-## Documentation can be found here: https://bookshare.dearbornschools.org/fordsontheme/
-
 ## Recommended Settings for Best Results
 These settings below are found in the Moodle Site Administration Pages.  These are not related to the theme but will help bring out the best of Fordson.
 
@@ -22,6 +20,39 @@ Click on the button to "Clone or Download" https://github.com/dbnschools/moodle-
 
 # Versions and Updates
 
+## Moodle 3.5 Fordson v3.5 release 3 update 16
+* Implemented preferred way of handling login tokens which will allow for both a custom login form (as used on some site homepages in Fordson) as well as login tokens on the normal Moodle login page. Thanks to Gareth Barnard and others who helped flush this out over the past couple of days.  
+* This version will work with both Moodle 3.5.2 and Moodle 3.5.3 and fixes any incompatibility issues.
+
+## Moodle 3.5 Fordson v3.5 release 3 update 15
+* Custom login form on site home was restored after learning more about the new token system and implementing it properly.
+
+## Moodle 3.5 Fordson v3.5 release 3 update 14
+* Fixed login issue in Moodle 3.5.3 where a login token was required and the theme was not passing a token.
+* Removed custom login form on site homepage which essentially replicated a login block.  Workaround is to use a login block or Force Users to login and utlize the Custom Login Page feature of Fordson.  We will now have one way to login and that is on the actual login page for Moodle.  It can be customized but this will help moving forward to make things more concise instead of 3 ways to login there will now be one page which can be customized or utilize the default moodle login form.
+* New Feature:  Top Navbar will change color if you can edit a page (Teacher Role).  When a teacher switches their role to student the top navbar will revert back to the default white color.  This can be customized on the color page.  
+
+## Moodle 3.5 Fordson v3.5 release 3 update 13
+* Fixed Media Player not displaying full screen
+
+## Moodle 3.5 Fordson v3.5 release 3 update 12
+* Fixed issue where navbar/breadcrumbs showed up on frontpage when using Boost default block setting.  This was an undesired behavior.  
+* Spectrum Preset Quiz Styling changes.  We changed the styling of the quiz to better reflect the styling of the preset.
+
+## Moodle 3.5 Fordson v3.5 release 3 update 11
+* Fixed LTI tool icon issue and custom favicon based on Gareth Barnards solution in Essentail theme. https://moodle.org/mod/forum/discuss.php?d=371252#p1516474
+* MISTAR Gradebook Export plugin styling
+* Fixed double import of custom SCSS and CSS from Fordson Color tab
+* Fixed block display issue with the block button appearing when it should not: https://github.com/dbnschools/moodle-theme_fordson/issues/39
+* Added check box to turn off activity navigation at the bottom of activity pages.  This is not possible in core Moodle so we added it to the theme on the Menu settings tab.
+* Made small CSS adjustments with default Fordson presets when using Collapsed topic course format.
+
+## Moodle 3.5 Fordson v3.5 release 3 update 10
+* Fixed logo not appearing properly on homepage.
+* CSS changes to improve assignment grading.
+* Compressed theme image for a smaller file size
+* Enhanced tabs CSS for Spectrum Achromatic preset
+* Fixed CSS issue with Gradebook User Report where name was not visible
 
 ## Moodle 3.5 Fordson v3.5 release 3 update 9
 * Fixed media player issue with not displaying properly when added to main course page

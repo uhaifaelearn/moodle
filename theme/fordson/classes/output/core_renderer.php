@@ -653,8 +653,14 @@ class core_renderer extends \theme_boost\output\core_renderer {
         $marketing9buttonurl = (empty($PAGE->theme->settings->marketing9buttonurl)) ? false : $PAGE->theme->settings->marketing9buttonurl;
         $marketing9target = (empty($PAGE->theme->settings->marketing9target)) ? false : $PAGE->theme->settings->marketing9target;
         $marketing9image = (empty($PAGE->theme->settings->marketing9image)) ? false : 'marketing9image';
-        
-        $fp_wonderboxcontext = ['hasfptextbox' => (!empty($PAGE->theme->settings->fptextbox && isloggedin())) , 'fptextbox' => $fptextbox, 'hasslidetextbox' => (!empty($PAGE->theme->settings->slidetextbox && isloggedin())) , 'slidetextbox' => $slidetextbox, 'hasfptextboxlogout' => !isloggedin() , 'fptextboxlogout' => $fptextboxlogout, 'hasshowloginform' => $PAGE->theme->settings->showloginform, 'hasalert' => (!empty($PAGE->theme->settings->alertbox && isloggedin())) , 'alertbox' => $alertbox, 'hasmarkettiles' => ($hasmarketing1 || $hasmarketing2 || $hasmarketing3 || $hasmarketing4 || $hasmarketing5 || $hasmarketing6) ? true : false, 'markettiles' => array(
+        //$logintoken = \core\session\manager::get_login_token();
+        if(method_exists('\core\session\manager', 'get_login_token')) {
+            $logintoken = \core\session\manager::get_login_token();
+        } else {
+            $logintoken = '';
+        }
+
+        $fp_wonderboxcontext = ['logintoken' => $logintoken, 'hasfptextbox' => (!empty($PAGE->theme->settings->fptextbox && isloggedin())) , 'fptextbox' => $fptextbox, 'hasslidetextbox' => (!empty($PAGE->theme->settings->slidetextbox && isloggedin())) , 'slidetextbox' => $slidetextbox, 'hasfptextboxlogout' => !isloggedin() , 'fptextboxlogout' => $fptextboxlogout, 'hasshowloginform' => $PAGE->theme->settings->showloginform, 'hasalert' => (!empty($PAGE->theme->settings->alertbox && isloggedin())) , 'alertbox' => $alertbox, 'hasmarkettiles' => ($hasmarketing1 || $hasmarketing2 || $hasmarketing3 || $hasmarketing4 || $hasmarketing5 || $hasmarketing6) ? true : false, 'markettiles' => array(
             array(
                 'hastile' => $hasmarketing1,
                 'tileimage' => $marketing1image,
@@ -1231,11 +1237,6 @@ class core_renderer extends \theme_boost\output\core_renderer {
         $eventmonitoringlink = new moodle_url('/admin/tool/monitor/managerules.php', array(
             'courseid' => $PAGE->course->id
         ));
-
-        $localbackupprovidertitle = get_string('import', 'local_remote_backup_provider');
-        $localbackupproviderlink = new moodle_url('/local/remote_backup_provider/index.php',
-            array('id' => $PAGE->course->id)
-        );
         // Student Dash.
         if (\core_completion\progress::get_course_progress_percentage($PAGE->course)) {
             $comppc = \core_completion\progress::get_course_progress_percentage($PAGE->course);
@@ -1470,11 +1471,6 @@ class core_renderer extends \theme_boost\output\core_renderer {
                 'url' => $eventmonitoringlink
             ) ,
             array(
-                'hascoursemanagelinks' => $localbackupprovidertitle,
-                'title' => $localbackupprovidertitle,
-                'url' => $localbackupproviderlink
-            ) ,
-            array(
                 'hasbadgelinks' => $badgemanagetitle,
                 'title' => $badgemanagetitle,
                 'url' => $badgemanagelink
@@ -1540,6 +1536,7 @@ class core_renderer extends \theme_boost\output\core_renderer {
         $context->hascustomlogin = $PAGE->theme->settings->showcustomlogin == 1;
         $context->hasdefaultlogin = $PAGE->theme->settings->showcustomlogin == 0;
         $context->alertbox = $PAGE->theme->settings->alertbox;
+        
         if ($url) {
             $url = $url->out(false);
         }
@@ -1549,10 +1546,12 @@ class core_renderer extends \theme_boost\output\core_renderer {
     }
 
     public function favicon() {
-        if (!empty($this->page->theme->setting_file_url('favicon', 'favicon'))) {
-            return $this->page->theme->setting_file_url('favicon', 'favicon');
+        $favicon = $this->page->theme->setting_file_url('favicon', 'favicon');
+
+        if (empty($favicon)) {
+            return $this->page->theme->image_url('favicon', 'theme');
         } else {
-        return $this->image_url('favicon', 'theme');
+            return $favicon;
         }
     }
 
@@ -1576,6 +1575,30 @@ class core_renderer extends \theme_boost\output\core_renderer {
             if ($quiz_record && $quiz_record->browserrequired == 1) {
                 return true;
             }
+        }
+        return false;
+    }
+
+    public function show_teacher_navbarcolor() {
+        global $PAGE;
+        $theme = theme_config::load('fordson');
+        $context = $this->page->context;
+        $hasteacherrole = has_capability('moodle/course:viewhiddenactivities', $context);
+
+        if ($PAGE->theme->settings->navbarcolorswitch == 1 && $hasteacherrole) {
+            return true;
+        }
+        return false;
+    }
+
+    public function show_student_navbarcolor() {
+        global $PAGE;
+        $theme = theme_config::load('fordson');
+        $context = $this->page->context;
+        $hasstudentrole = !has_capability('moodle/course:viewhiddenactivities', $context);
+
+        if ($PAGE->theme->settings->navbarcolorswitch == 1 && $hasstudentrole) {
+            return true;
         }
         return false;
     }
