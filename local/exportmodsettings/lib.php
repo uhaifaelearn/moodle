@@ -1,0 +1,110 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ * @package local_exportmodsettings
+ * @author Mike Churchward <mike.churchward@poetgroup.org>
+ * @license http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * @copyright 2016 POET
+ */
+
+
+/**
+ * Hook function to extend the course settings navigation. Call all context functions
+ */
+
+function local_exportmodsettings_create_file(){
+    global $DB, $CFG;
+
+    local_exportmodsettings_log_file_success('Start cron');
+
+    $folderPath = $CFG->dataroot.'/sap';
+    $filename = 'export_'.time().'.csv';
+    $pathToFile = $folderPath.'/'.$filename;
+
+    //Example
+    $num = 0;
+    $data = array();
+
+    $headers = array('id','username','firstname','lastname');
+    $users = $DB->get_records('user');
+
+    foreach($users as $user){
+        $data[$num]['id'] = $user->id;
+        $data[$num]['username'] = $user->username;
+        $data[$num]['firstname'] = $user->firstname;
+        $data[$num]['lastname'] = $user->lastname;
+
+        $num++;
+    }
+
+    //Create folder if not exists
+    if(!file_exists($folderPath)){
+        if (!mkdir($folderPath, 0755, true)){
+            die("No permission for ".$folderPath);
+        }
+    }
+
+    //If file present
+    if(file_exists($pathToFile)){
+        local_exportmodsettings_log_file_error("File present ".$pathToFile);
+        //die("File present ".$pathToFile);
+    }
+
+    $output = fopen($pathToFile,'w') or die("Can't open ".$pathToFile);
+//    header("Content-Type:application/csv");
+//    header("Content-Disposition:attachment;filename=".$filename);
+
+    //headers
+    fputcsv($output, $headers);
+
+    foreach($data as $row) {
+        fputcsv($output, $row);
+    }
+    fclose($output) or die("Can't close ".$pathToFile);
+
+    local_exportmodsettings_log_file_success('End cron');
+
+}
+
+function local_exportmodsettings_log_file($status, $str){
+    global $DB, $CFG;
+
+    $folderPath = $CFG->dataroot.'/sap';
+    $filename = 'log_process.txt';
+    $pathToFile = $folderPath.'/'.$filename;
+
+    //Create folder if not exists
+    if(!file_exists($folderPath)){
+        if (!mkdir($folderPath, 0755, true)){
+            die("No permission for ".$folderPath);
+        }
+    }
+
+    $output = fopen($pathToFile,'a') or die("Can't open ".$pathToFile);
+
+    $data = $status.' '.date("Y-m-d H:i:s").' '.$str.PHP_EOL;
+    fwrite($output, $data);
+    fclose($output) or die("Can't close ".$pathToFile);
+}
+
+function local_exportmodsettings_log_file_success($str){
+    local_exportmodsettings_log_file('SUCCESS', $str);
+}
+
+function local_exportmodsettings_log_file_error($str){
+    local_exportmodsettings_log_file('ERROR', $str);
+}
