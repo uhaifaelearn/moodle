@@ -19,14 +19,56 @@
  * You can have a rather longer description of the file as well,
  * if you like, and it can span multiple lines.
  *
- * @package    local_oercatalog
+ * @package    local_exportmodsettings
  * @copyright  2016 Your Name <your@email.address>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 // Replace newmodule with the name of your module and remove this line.
 require_once(__DIR__.'/../../config.php');
-require_once($CFG->dirroot . '/local/exportmodsettings/lib.php');
+require_once('locallib.php');
 
-local_exportmodsettings_create_file();
-local_exportmodsettings_log_file_error('123');
-local_exportmodsettings_log_file_success('123');
+require_once('general_form.php');
+global $PAGE, $COURSE;
+
+require_login();
+$context = context_system::instance();
+
+//echo '<pre>';print_r($_POST);exit;
+
+$PAGE->set_context($context);
+$PAGE->set_heading(get_string('page_index','local_exportmodsettings'));
+$PAGE->set_title(get_string('page_index','local_exportmodsettings'));
+$PAGE->set_url(new moodle_url('/local/exportmodsettings/index.php'), $_GET);
+$PAGE->set_pagelayout('incourse');
+
+$params = array('id' => 1);
+$mform = new general_form(null, $params);
+
+echo $OUTPUT->header();
+
+$mform->set_default_data();
+$mform->display();
+
+$fromform = $mform->get_data();
+
+//    //Handle form cancel operation, if cancel button is present on form
+//if ($fromform = $mform->get_data()) {
+//    //In this case you process validated data. $mform->get_data() returns data posted in form.
+//} else {
+//    // this branch is executed if the form is submitted but the data doesn't validate and the form should be redisplayed
+//    // or on the first display of the form.
+//
+//    //Set default data (if any)
+//    $mform->set_data($toform);
+//    //displays the form
+//    $mform->display();
+//}
+
+
+echo $OUTPUT->footer();
+
+
+
+//local_exportmodsettings_create_file();
+//local_exportmodsettings_log_file_error('123');
+//local_exportmodsettings_log_file_success('123');

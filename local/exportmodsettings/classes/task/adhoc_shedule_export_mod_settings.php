@@ -53,7 +53,7 @@ class adhoc_shedule_export_mod_settings extends \core\task\adhoc_task {
      */
     public function execute() {
         global $CFG, $DB, $USER;
-        require_once($CFG->dirroot . '/local/exportmodsettings/lib.php');
+        require_once($CFG->dirroot . '/local/exportmodsettings/locallib.php');
 
         $lockkey = 'export_mod';
         $lockfactory = \core\lock\lock_config::get_lock_factory('local_exportmodsettings_task');

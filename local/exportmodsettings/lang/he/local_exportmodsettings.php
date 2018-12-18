@@ -26,4 +26,11 @@
 defined('MOODLE_INTERNAL') || die();
 
 $string['pluginname'] = 'Export mod settings';
+$string['page_index'] = 'Settings and export mod settings';
 $string['export_mod_settings'] = 'Export mod settings';
+$string['cron_settings'] = 'Cron settings';
+$string['export_file'] = 'ייצוא קובץ';
+$string['year'] = 'שנה';
+$string['semester'] = 'סמסטר';
+$string['crontime'] = 'הגדרות אופן הרצה אוטומטית';
+$string['twodays'] = 'יומיים';

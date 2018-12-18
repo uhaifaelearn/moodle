@@ -53,7 +53,7 @@ class shedule_export_mod_settings extends \core\task\scheduled_task {
      */
     public function execute() {
         global $CFG, $DB, $USER;
-        require_once($CFG->dirroot . '/local/exportmodsettings/lib.php');
+        require_once($CFG->dirroot . '/local/exportmodsettings/locallib.php');
 
         //local_exportmodsettings_create_file();
 

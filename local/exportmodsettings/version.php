@@ -26,5 +26,5 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->component = 'local_exportmodsettings';
 $plugin->release = 'INITIAL';
-$plugin->version = 2018110704;
+$plugin->version = 2018110705;
 $plugin->requires = 2016052300;
