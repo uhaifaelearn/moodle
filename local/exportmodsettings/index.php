@@ -44,28 +44,16 @@ $PAGE->set_pagelayout('incourse');
 $params = array('id' => 1);
 $mform = new general_form(null, $params);
 
-echo $OUTPUT->header();
-
 $mform->set_default_data();
-$mform->display();
+$mform->get_data();
 
-$fromform = $mform->get_data();
-
-//    //Handle form cancel operation, if cancel button is present on form
-//if ($fromform = $mform->get_data()) {
-//    //In this case you process validated data. $mform->get_data() returns data posted in form.
-//} else {
-//    // this branch is executed if the form is submitted but the data doesn't validate and the form should be redisplayed
-//    // or on the first display of the form.
-//
-//    //Set default data (if any)
-//    $mform->set_data($toform);
-//    //displays the form
-//    $mform->display();
-//}
-
-
-echo $OUTPUT->footer();
+if(!$mform->is_download()) {
+    echo $OUTPUT->header();
+    $mform->display();
+    echo $OUTPUT->footer();
+}else{
+    $mform->download();
+}
 
 
 

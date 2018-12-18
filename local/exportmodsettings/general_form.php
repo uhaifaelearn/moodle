@@ -5,7 +5,9 @@ require_once($CFG->dirroot . '/lib/formslib.php');
 require_once('locallib.php');
 
 class general_form extends moodleform {
-	
+
+    public $ifdownload = false;
+
 	public function definition() {
 
 		$mform = $this->_form; // Don't forget the underscore!
@@ -102,9 +104,19 @@ class general_form extends moodleform {
 
         //Export excel
         if(isset($data->exportfile)){
-            local_exportmodsettings_create_file();
+            $this->ifdownload = true;
         }
 
         //echo '<pre>';print_r($data);exit;
+    }
+
+    public function is_download() {
+	    return $this->ifdownload;
+    }
+
+    public function download() {
+        if($this->ifdownload){
+            local_exportmodsettings_create_file();
+        }
     }
 }
