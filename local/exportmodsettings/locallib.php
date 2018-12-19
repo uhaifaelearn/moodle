@@ -72,6 +72,12 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
         'LAST_UPDATED',
     );
 
+    //Start test time execute
+    local_exportmodsettings_log_file_success('start test');
+    $start = microtime(true);
+
+//    for($t=0; $t <50000; $t++) {
+
     $query ="
         SELECT
             gi.id,
@@ -116,12 +122,6 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
 
     $query .= $select;
 
-    //Start test time execute
-    local_exportmodsettings_log_file_success('start test');
-    $start = microtime(true);
-
-//    for($t=0; $t <50000; $t++) {
-
     $result = $DB->get_records_sql($query, $attributes);
 
     foreach ($result as $item) {
@@ -152,6 +152,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
 
         $num++;
     }
+    
 //    }
     $time_elapsed_secs = microtime(true) - $start;
     local_exportmodsettings_log_file_success('end test '.$time_elapsed_secs);
