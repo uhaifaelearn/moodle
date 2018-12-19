@@ -32,5 +32,11 @@ $string['cron_settings'] = 'Cron settings';
 $string['export_file'] = 'Export file';
 $string['year'] = 'Year';
 $string['semester'] = 'Semester';
+$string['start_date'] = 'Start date';
+$string['end_date'] = 'End date';
 $string['crontime'] = 'How to run automatically';
 $string['twodays'] = 'two days';
+
+//errors
+$string['empty_field'] = 'Empty field';
+$string['wrong_dates'] = 'Wrong dates';

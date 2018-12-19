@@ -15,16 +15,32 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version and other meta-data are defined here.
+ * Code to be executed after the plugin's database scheme has been installed is defined here.
  *
  * @package     local_exportmodsettings
+ * @category    upgrade
  * @copyright   2017 nadavkav@gmail.com
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
+require_once($CFG->dirroot .'/local/exportmodsettings/locallib.php');
 
-$plugin->component = 'local_exportmodsettings';
-$plugin->release = 'INITIAL';
-$plugin->version = 2018110700;
-$plugin->requires = 2016052300;
+/**
+ * Custom code to be run on installing the plugin.
+ */
+function xmldb_local_exportmodsettings_install() {
+    global $DB;
+
+    $array = CRONPERIODS;
+    reset($array);
+    $first_key = key($array);
+
+    $obj = new \stdClass();
+    $obj->plugin = 'local_exportmodsettings';
+    $obj->name = 'crontime';
+    $obj->value = $first_key;
+    $DB->insert_record('config_plugins', $obj);
+
+    return true;
+}

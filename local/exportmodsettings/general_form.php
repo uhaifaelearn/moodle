@@ -7,6 +7,7 @@ require_once('locallib.php');
 class general_form extends moodleform {
 
     public $ifdownload = false;
+    public $postdata;
 
 	public function definition() {
 
@@ -19,7 +20,7 @@ class general_form extends moodleform {
         $mform->setExpanded('general', true);
 
         $attributes = array();
-        $select = $mform->addElement('select', 'crontime', get_string('crontime', 'local_exportmodsettings'), CRONPERIODS, $attributes);
+        $select = $mform->addElement('select', 'crontime', get_string('crontime', 'local_exportmodsettings'), CRONPERIODSSELECT, $attributes);
         $select->setMultiple(false);
 
         $mform->addElement('submit', 'submitcrontime', get_string('savechanges'));
@@ -40,25 +41,28 @@ class general_form extends moodleform {
         $mform->setType('semester', PARAM_RAW);
 
         //Date
-        $mform->addElement('date_selector', 'startdate', get_string('from'));
-        $mform->addElement('date_selector', 'enddate', get_string('to'));
+        $mform->addElement('date_selector', 'startdate', get_string('start_date', 'local_exportmodsettings'));
+        $mform->addElement('date_selector', 'enddate', get_string('end_date', 'local_exportmodsettings'));
 
         $mform->addElement('submit', 'exportfile', get_string('export_file', 'local_exportmodsettings'));
 
 	}
 
-	//TODO
     function validation($data, $files) {
         $errors = parent::validation($data, $files);
 
         //Export excel
         if(isset($data['exportfile'])){
             if(empty($data['year'])){
-                $errors['year'] = 'error';
+                $errors['year'] = get_string('empty_field', 'local_exportmodsettings');
             }
 
             if(empty($data['semester'])){
-                $errors['semester'] = 'error';
+                $errors['semester'] = get_string('empty_field', 'local_exportmodsettings');
+            }
+
+            if($data['startdate'] > $data['enddate']){
+                $errors['enddate'] = get_string('wrong_dates', 'local_exportmodsettings');;
             }
         }
 
@@ -86,6 +90,7 @@ class general_form extends moodleform {
         global $DB, $USER, $CFG;
 
         $data = parent::get_data();
+        $this->postdata = $data;
 
         //Save crontime
         if(isset($data->submitcrontime)){
@@ -116,7 +121,7 @@ class general_form extends moodleform {
 
     public function download() {
         if($this->ifdownload){
-            local_exportmodsettings_create_file();
+            local_exportmodsettings_download_file($this->postdata);
         }
     }
 }

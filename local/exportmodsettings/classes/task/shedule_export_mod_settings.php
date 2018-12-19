@@ -55,8 +55,6 @@ class shedule_export_mod_settings extends \core\task\scheduled_task {
         global $CFG, $DB, $USER;
         require_once($CFG->dirroot . '/local/exportmodsettings/locallib.php');
 
-        //local_exportmodsettings_create_file();
-
         $task = new \local_exportmodsettings\task\adhoc_shedule_export_mod_settings();
         $task->set_custom_data(
             array(

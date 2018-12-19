@@ -32,5 +32,11 @@ $string['cron_settings'] = 'Cron settings';
 $string['export_file'] = 'ייצוא קובץ';
 $string['year'] = 'שנה';
 $string['semester'] = 'סמסטר';
+$string['start_date'] = 'תחילת תאריך';
+$string['end_date'] = 'סיום תאריך';
 $string['crontime'] = 'הגדרות אופן הרצה אוטומטית';
 $string['twodays'] = 'יומיים';
+
+//errors
+$string['empty_field'] = 'שדה ריק';
+$string['wrong_dates'] = 'תאריכים שגויים';

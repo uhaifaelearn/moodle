@@ -33,8 +33,6 @@ global $PAGE, $COURSE;
 require_login();
 $context = context_system::instance();
 
-//echo '<pre>';print_r($_POST);exit;
-
 $PAGE->set_context($context);
 $PAGE->set_heading(get_string('page_index','local_exportmodsettings'));
 $PAGE->set_title(get_string('page_index','local_exportmodsettings'));
@@ -54,9 +52,3 @@ if(!$mform->is_download()) {
 }else{
     $mform->download();
 }
-
-
-
-//local_exportmodsettings_create_file();
-//local_exportmodsettings_log_file_error('123');
-//local_exportmodsettings_log_file_success('123');

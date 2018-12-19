@@ -26,31 +26,50 @@
  * Hook function to extend the course settings navigation. Call all context functions
  */
 
+define("CRONPERIODSSELECT", array(
+    0 => get_string('day'),
+    1 => get_string('twodays', 'local_exportmodsettings'),
+    2 => get_string('week'),
+    3 => get_string('month'),
+    4 => get_string('all')
+));
+
 define("CRONPERIODS", array(
-                            0 => get_string('day'),
-                            1 => get_string('twodays', 'local_exportmodsettings'),
-                            2 => get_string('week'),
-                            3 => get_string('month'),
-                            4 => get_string('all')
-                      ));
+    0 => 24*60*60, //sec
+    1 => 2*24*60*60, //sec
+    2 => 7*24*60*60, //sec
+    3 => 30*24*60*60, //sec
+    4 => 0 //all
+));
 
 define("DEFAULTYEAR", "default year");
 define("DEFAULTSEMESTER", "default semester");
 
-function local_exportmodsettings_create_file(){
-    global $DB, $CFG;
-
-    local_exportmodsettings_log_file_success('Start cron');
-
-    $folderPath = $CFG->dataroot.'/sap';
-    $filename = 'export_'.time().'.csv';
-    $pathToFile = $folderPath.'/'.$filename;
+function local_exportmodsettings_generate_output_csv($output, $postdata = array()){
+    global $DB;
 
     //Example
     $num = 0;
     $data = array();
 
-    $headers = array('id','username','firstname','lastname');
+    $headers = array(
+        'YEAR',
+        'SEMESTER',
+        'SM_OBJID',
+        'E_OBJID',
+        'MOODLE_ID',
+        'ASSIGN_NAME',
+        'WEIGHT',
+        'OBLIGATORY',
+        'PASS_GRADE',
+        'ASSIGN_REQ',
+        'ASSIGN_FOR_AVG',
+        'PARENT_ASSIGN',
+        'SUPPORTIVE_GRADE',
+        'ASSIGN_TYPE',
+        'LAST_UPDATED',
+    );
+
     $users = $DB->get_records('user');
 
     foreach($users as $user){
@@ -61,6 +80,24 @@ function local_exportmodsettings_create_file(){
 
         $num++;
     }
+
+    //headers
+    fputcsv($output, $headers);
+    foreach($data as $row) {
+        fputcsv($output, $row);
+    }
+
+    return $output;
+}
+
+function local_exportmodsettings_save_file_to_disk(){
+    global $DB, $CFG;
+
+    local_exportmodsettings_log_file_success('Start cron');
+
+    $folderPath = $CFG->dataroot.'/sap';
+    $filename = 'export_'.time().'.csv';
+    $pathToFile = $folderPath.'/'.$filename;
 
     //Create folder if not exists
     if(!file_exists($folderPath)){
@@ -76,19 +113,28 @@ function local_exportmodsettings_create_file(){
     }
 
     $output = fopen($pathToFile,'w') or die("Can't open ".$pathToFile);
-    header("Content-Type:application/csv");
-    header("Content-Disposition:attachment;filename=".$filename);
-
-    //headers
-    fputcsv($output, $headers);
-
-    foreach($data as $row) {
-        fputcsv($output, $row);
-    }
+    $output = local_exportmodsettings_generate_output_csv($output);
     fclose($output) or die("Can't close ".$pathToFile);
 
     local_exportmodsettings_log_file_success('End cron');
+}
 
+function local_exportmodsettings_download_file($postdata){
+    global $DB, $CFG;
+
+    local_exportmodsettings_log_file_success('Start download');
+
+    $filename = 'export_'.time().'.csv';
+
+    header("Content-type: application/csv");
+    header("Content-Disposition: attachment; filename=".$filename);
+
+    $output = fopen('php://output', 'w');
+    $output = local_exportmodsettings_generate_output_csv($output, $postdata);
+    fclose($output);
+
+    local_exportmodsettings_log_file_success('End download');
+    exit;
 }
 
 function local_exportmodsettings_log_file($status, $str){
