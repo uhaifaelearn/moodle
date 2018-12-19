@@ -57,7 +57,7 @@ class adhoc_shedule_export_mod_settings extends \core\task\adhoc_task {
 
         $lockkey = 'export_mod';
         $lockfactory = \core\lock\lock_config::get_lock_factory('local_exportmodsettings_task');
-        $lock = $lockfactory->get_lock($lockkey, 10);
+        $lock = $lockfactory->get_lock($lockkey, 0);
 
         if ($lock !== false) {
             local_exportmodsettings_save_file_to_disk();

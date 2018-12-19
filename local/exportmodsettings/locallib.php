@@ -115,19 +115,26 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
     }
 
     $query .= $select;
+
+    //Start test time execute
+    local_exportmodsettings_log_file_success('start test');
+    $start = microtime(true);
+
+//    for($t=0; $t <50000; $t++) {
+
     $result = $DB->get_records_sql($query, $attributes);
 
-    foreach($result as $item){
+    foreach ($result as $item) {
 
         //Prepare YEAR and SEMESTER
         $arrname = explode('-', $item->course_name);
-        $data[$num]['YEAR'] = (isset($arrname[3]))?$arrname[3]:'';
-        $data[$num]['SEMESTER'] = (isset($arrname[2] ))?TYPESEMESTER[preg_replace("/[^a-zA-Z]+/", "", $arrname[2])]:'';
+        $data[$num]['YEAR'] = (isset($arrname[3])) ? $arrname[3] : '';
+        $data[$num]['SEMESTER'] = (isset($arrname[2])) ? TYPESEMESTER[preg_replace("/[^a-zA-Z]+/", "", $arrname[2])] : '';
 
         //Prepare SM_OBJID and E_OBJID
         $arridnumber = explode('-', $item->course_idnumber);
-        $data[$num]['SM_OBJID'] = (isset($arridnumber[1]))?$arridnumber[1]:'';
-        $data[$num]['E_OBJID'] = (isset($arridnumber[0]))?$arridnumber[0]:'';
+        $data[$num]['SM_OBJID'] = (isset($arridnumber[1])) ? $arridnumber[1] : '';
+        $data[$num]['E_OBJID'] = (isset($arridnumber[0])) ? $arridnumber[0] : '';
 
         $data[$num]['MOODLE_ID'] = $item->moodle_id;
         $data[$num]['ASSIGN_NAME'] = $item->assign_name;
@@ -145,6 +152,10 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
 
         $num++;
     }
+//    }
+    $time_elapsed_secs = microtime(true) - $start;
+    local_exportmodsettings_log_file_success('end test '.$time_elapsed_secs);
+    //End test time execute
 
     //headers
     fputcsv($output, $headers);
