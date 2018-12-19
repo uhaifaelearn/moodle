@@ -31,14 +31,19 @@ class general_form extends moodleform {
 
 		//Year
         $attributes = array();
-        $mform->addElement('text', 'year', get_string('year', 'local_exportmodsettings'), $attributes);
-        //$mform->addRule('year', null, 'required', null, 'client');
-        $mform->setType('year', PARAM_RAW);
+        $selectyears = array();
+        $currentyear = date("Y");
+        for($i = $currentyear-50; $i < $currentyear+50; $i++){
+            $selectyears[$i] = $i;
+        }
+
+        $select = $mform->addElement('select', 'year', get_string('year', 'local_exportmodsettings'), $selectyears, $attributes);
+        $select->setMultiple(false);
 
         //Semester
         $attributes = array();
-        $mform->addElement('text', 'semester', get_string('semester', 'local_exportmodsettings'), $attributes);
-        $mform->setType('semester', PARAM_RAW);
+        $select = $mform->addElement('select', 'semester', get_string('semester', 'local_exportmodsettings'), TYPESEMESTER, $attributes);
+        $select->setMultiple(false);
 
         //Date
         $mform->addElement('date_selector', 'startdate', get_string('start_date', 'local_exportmodsettings'));
@@ -53,14 +58,6 @@ class general_form extends moodleform {
 
         //Export excel
         if(isset($data['exportfile'])){
-            if(empty($data['year'])){
-                $errors['year'] = get_string('empty_field', 'local_exportmodsettings');
-            }
-
-            if(empty($data['semester'])){
-                $errors['semester'] = get_string('empty_field', 'local_exportmodsettings');
-            }
-
             if($data['startdate'] > $data['enddate']){
                 $errors['enddate'] = get_string('wrong_dates', 'local_exportmodsettings');;
             }
@@ -80,8 +77,7 @@ class general_form extends moodleform {
             $defaultdata['crontime'] = $row->value;
         }
 
-        $defaultdata['year'] = DEFAULTYEAR;
-        $defaultdata['semester'] = DEFAULTSEMESTER;
+        $defaultdata['year'] = date("Y");
 
         parent::set_data($defaultdata);
     }
