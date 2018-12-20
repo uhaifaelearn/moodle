@@ -81,9 +81,9 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
             ag.grade AS grade,
             
             GREATEST(a.timemodified, ag.timemodified) AS last_updated        
-        FROM mdl_assign_grades AS ag
-        LEFT JOIN mdl_assign AS a ON (a.id = ag.assignment)
-        LEFT JOIN mdl_course AS c ON (c.id = a.course)
+        FROM {assign_grades} AS ag
+        LEFT JOIN {assign} AS a ON (a.id = ag.assignment)
+        LEFT JOIN {course} AS c ON (c.id = a.course)
          
     ";
 
@@ -96,6 +96,7 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
             $attributes = array(time() - $periodago);
             $select = " WHERE GREATEST(a.timemodified, ag.timemodified) > ?  ";
         }else{
+            $attributes = array();
             $select = "";
         }
     }

@@ -37,6 +37,10 @@ $string['end_date'] = 'סיום תאריך';
 $string['crontime'] = 'הגדרות אופן הרצה אוטומטית';
 $string['twodays'] = 'יומיים';
 
+$string['type_assign_1'] = 'מטלת אב';
+$string['type_assign_2'] = 'מטלת בן';
+$string['type_assign_3'] = 'מטלה רגילה';
+
 //errors
 $string['empty_field'] = 'שדה ריק';
 $string['wrong_dates'] = 'תאריכים שגויים';

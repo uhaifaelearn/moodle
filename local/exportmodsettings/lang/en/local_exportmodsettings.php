@@ -37,6 +37,10 @@ $string['end_date'] = 'End date';
 $string['crontime'] = 'How to run automatically';
 $string['twodays'] = 'two days';
 
+$string['type_assign_1'] = 'מטלת אב';
+$string['type_assign_2'] = 'מטלת בן';
+$string['type_assign_3'] = 'מטלה רגילה';
+
 //errors
 $string['empty_field'] = 'Empty field';
 $string['wrong_dates'] = 'Wrong dates';
