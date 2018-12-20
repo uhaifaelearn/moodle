@@ -43,7 +43,7 @@ class shedule_export_mod_settings extends \core\task\scheduled_task {
      * @return string
      */
     public function get_name() {
-        return get_string('export_mod_settings', 'local_exportmodsettings');
+        return get_string('export_mod', 'local_exportmodsettings');
     }
 
     /**
