@@ -72,22 +72,19 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
     $start = microtime(true);
 
     $query ="
-        SELECT
-            gi.id,
+        SELECT 
+            ag.id,
             c.shortname AS course_name,
             c.idnumber AS course_idnumber,
-            gi.iteminstance AS moodle_id,
-            a.name AS assign_name,
-            gi.aggregationcoef2*100 AS weight,
-            gi.hidden AS obligatory,
-            gi.gradepass AS pass_grade,
+            ag.assignment AS moodle_id,
+            ag.userid AS student12,
+            ag.grade AS grade,
             
-            GREATEST(a.timemodified, gi.timemodified) AS last_updated
-            
-        FROM {grade_items} AS gi
-        LEFT JOIN {course} AS c ON (c.id = gi.courseid)
-        LEFT JOIN {assign} AS a ON (a.id = gi.iteminstance)
-        LEFT JOIN {grade_categories} AS gc ON (gc.id = gi.categoryid)          
+            GREATEST(a.timemodified, ag.timemodified) AS last_updated        
+        FROM mdl_assign_grades AS ag
+        LEFT JOIN mdl_assign AS a ON (a.id = ag.assignment)
+        LEFT JOIN mdl_course AS c ON (c.id = a.course)
+         
     ";
 
     //If used in cron
@@ -97,10 +94,9 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
 
         if($periodago != 0) {
             $attributes = array(time() - $periodago);
-            $select = " WHERE gi.itemmodule='assign' 
-                    AND GREATEST(a.timemodified, gi.timemodified) > ?  ";
+            $select = " WHERE GREATEST(a.timemodified, ag.timemodified) > ?  ";
         }else{
-            $select = " WHERE gi.itemmodule='assign' ";
+            $select = "";
         }
     }
 
@@ -110,8 +106,7 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         $year = '-'.$postdata->year;
         $semester = '-'.$postdata->semester;
         $select = " 
-            WHERE gi.itemmodule='assign' 
-            AND GREATEST(a.timemodified, gi.timemodified) BETWEEN ? AND ? 
+            WHERE GREATEST(a.timemodified, ag.timemodified) BETWEEN ? AND ? 
             AND c.shortname LIKE('%".$year."%')
             AND c.shortname LIKE('%".$semester."%')         
          ";
@@ -134,8 +129,8 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         $data[$num]['E_OBJID'] = (isset($arridnumber[0])) ? $arridnumber[0] : '';
         $data[$num]['MOODLE_ID'] = $item->moodle_id;
 
-        $data[$num]['Student12'] = '';
-        $data[$num]['Grade'] = '';
+        $data[$num]['Student12'] = $item->student12;
+        $data[$num]['Grade'] = $item->grade;
         $data[$num]['Passed'] = '';
 
         $data[$num]['LAST_UPDATED'] = $item->last_updated;
