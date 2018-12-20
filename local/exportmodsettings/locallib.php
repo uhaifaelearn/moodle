@@ -59,6 +59,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
 
     $num = 0;
     $data = array();
+    $usedids = array();
 
     $headers = array(
         'YEAR',
@@ -155,6 +156,8 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
 
         foreach ($result as $item) {
 
+            if(in_array($item->id, $usedids)) continue;
+
             //Prepare YEAR and SEMESTER
             $arrname = explode('-', $item->course_name);
             $data[$num]['YEAR'] = (isset($arrname[3])) ? $arrname[3] : '';
@@ -180,9 +183,8 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             $data[$num]['LAST_UPDATED'] = $item->last_updated;
 
             $num++;
+            $usedids[] = $item->id;
         }
-
-
     }
 
     $time_elapsed_secs = microtime(true) - $start;
