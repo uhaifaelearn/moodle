@@ -26,7 +26,7 @@
  * Hook function to extend the course settings navigation. Call all context functions
  */
 
-define("CRONPERIODSSELECT", array(
+define("SETTINGSCRONPERIODSSELECT", array(
     0 => get_string('day'),
     1 => get_string('twodays', 'local_exportmodsettings'),
     2 => get_string('week'),
@@ -34,7 +34,7 @@ define("CRONPERIODSSELECT", array(
     4 => get_string('all')
 ));
 
-define("CRONPERIODS", array(
+define("SETTINGSCRONPERIODS", array(
     0 => 24*60*60, //sec
     1 => 2*24*60*60, //sec
     2 => 7*24*60*60, //sec
@@ -42,7 +42,7 @@ define("CRONPERIODS", array(
     4 => 0 //all
 ));
 
-define("TYPESEMESTER", array(
+define("SETTINGSTYPESEMESTER", array(
     'A' => '001',
     'B' => '002',
     'C' => '003',
@@ -73,10 +73,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
     );
 
     //Start test time execute
-    local_exportmodsettings_log_file_success('start test');
     $start = microtime(true);
-
-//    for($t=0; $t <50000; $t++) {
 
     $query ="
         SELECT
@@ -100,11 +97,15 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
     //If used in cron
     if(empty($postdata)){
         $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodsettings', 'name' => 'crontime'));
-        $periodago = CRONPERIODS[$row->value];
+        $periodago = SETTINGSCRONPERIODS[$row->value];
 
-        $attributes = array(time() - $periodago);
-        $select = " WHERE gi.itemmodule='assign' 
+        if($periodago != 0) {
+            $attributes = array(time() - $periodago);
+            $select = " WHERE gi.itemmodule='assign' 
                     AND GREATEST(a.timemodified, gi.timemodified) > ?  ";
+        }else{
+            $select = " WHERE gi.itemmodule='assign' ";
+        }
     }
 
     //If used in download file
@@ -129,7 +130,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
         //Prepare YEAR and SEMESTER
         $arrname = explode('-', $item->course_name);
         $data[$num]['YEAR'] = (isset($arrname[3])) ? $arrname[3] : '';
-        $data[$num]['SEMESTER'] = (isset($arrname[2])) ? TYPESEMESTER[preg_replace("/[^a-zA-Z]+/", "", $arrname[2])] : '';
+        $data[$num]['SEMESTER'] = (isset($arrname[2])) ? SETTINGSTYPESEMESTER[preg_replace("/[^a-zA-Z]+/", "", $arrname[2])] : '';
 
         //Prepare SM_OBJID and E_OBJID
         $arridnumber = explode('-', $item->course_idnumber);
@@ -152,10 +153,9 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
 
         $num++;
     }
-    
-//    }
+
     $time_elapsed_secs = microtime(true) - $start;
-    local_exportmodsettings_log_file_success('end test '.$time_elapsed_secs);
+    local_exportmodsettings_log_file_success('Process took  '.$time_elapsed_secs.' sec');
     //End test time execute
 
     //headers
@@ -173,7 +173,7 @@ function local_exportmodsettings_save_file_to_disk(){
     local_exportmodsettings_log_file_success('Start cron');
 
     $folderPath = $CFG->dataroot.'/sap';
-    $filename = 'export_'.time().'.csv';
+    $filename = 'MoodleAssignSettings_'.date("Y_m_d_H_i_s").'.csv';
     $pathToFile = $folderPath.'/'.$filename;
 
     //Create folder if not exists
@@ -193,7 +193,7 @@ function local_exportmodsettings_save_file_to_disk(){
     $output = local_exportmodsettings_generate_output_csv($output);
     fclose($output) or die("Can't close ".$pathToFile);
 
-    local_exportmodsettings_log_file_success('End cron');
+    local_exportmodsettings_log_file_success('End cron. Saved to file '.$filename);
 }
 
 function local_exportmodsettings_download_file($postdata){
@@ -201,7 +201,7 @@ function local_exportmodsettings_download_file($postdata){
 
     local_exportmodsettings_log_file_success('Start download');
 
-    $filename = 'export_'.time().'.csv';
+    $filename = 'MoodleAssignSettings_'.date("Y_m_d_H_i_s").'.csv';
 
     header("Content-type: application/csv");
     header("Content-Disposition: attachment; filename=".$filename);

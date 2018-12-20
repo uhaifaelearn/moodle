@@ -32,7 +32,7 @@ require_once($CFG->dirroot .'/local/exportmodsettings/locallib.php');
 function xmldb_local_exportmodsettings_install() {
     global $DB;
 
-    $array = CRONPERIODS;
+    $array = SETTINGSCRONPERIODS;
     reset($array);
     $first_key = key($array);
 

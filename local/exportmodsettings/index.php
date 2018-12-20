@@ -31,6 +31,11 @@ require_once('general_form.php');
 global $PAGE, $COURSE;
 
 require_login();
+
+if(!is_siteadmin()){
+    print_error('User not admin');
+}
+
 $context = context_system::instance();
 
 $PAGE->set_context($context);

@@ -20,13 +20,13 @@ class general_form extends moodleform {
         $mform->setExpanded('general', true);
 
         $attributes = array();
-        $select = $mform->addElement('select', 'crontime', get_string('crontime', 'local_exportmodsettings'), CRONPERIODSSELECT, $attributes);
+        $select = $mform->addElement('select', 'crontime', get_string('crontime', 'local_exportmodsettings'), SETTINGSCRONPERIODSSELECT, $attributes);
         $select->setMultiple(false);
 
         $mform->addElement('submit', 'submitcrontime', get_string('savechanges'));
 
         //export mod settings
-        $mform->addElement('header', 'export', get_string('export_mod_settings', 'local_exportmodsettings'));
+        $mform->addElement('header', 'export', get_string('export_mod', 'local_exportmodsettings'));
         $mform->setExpanded('export', true);
 
 		//Year
@@ -42,7 +42,7 @@ class general_form extends moodleform {
 
         //Semester
         $attributes = array();
-        $select = $mform->addElement('select', 'semester', get_string('semester', 'local_exportmodsettings'), TYPESEMESTER, $attributes);
+        $select = $mform->addElement('select', 'semester', get_string('semester', 'local_exportmodsettings'), SETTINGSTYPESEMESTER, $attributes);
         $select->setMultiple(false);
 
         //Date
