@@ -48,11 +48,20 @@ define("SETTINGSTYPESEMESTER", array(
     'C' => '003',
 ));
 
+define("SETTINGSTYPESEMESTERVIEW", array(
+    '0' => get_string('all'),
+    'A' => get_string('char_a', 'local_exportmodsettings'),
+    'B' => get_string('char_b', 'local_exportmodsettings'),
+    'C' => get_string('char_c', 'local_exportmodsettings'),
+));
+
 define("SETTINGSTYPEASSIGN", array(
     '1' => get_string('type_assign_1', 'local_exportmodsettings'),
     '11' => get_string('type_assign_2', 'local_exportmodsettings'),
     '12' => get_string('type_assign_3', 'local_exportmodsettings'),
 ));
+
+define("SETTINGSCATEGORYOFFSET", 90000);
 
 function local_exportmodsettings_generate_output_csv($output, $postdata = array()){
     global $DB;
@@ -79,7 +88,22 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
         'LAST_UPDATED',
     );
 
-    $listmods = array('assign', 'quiz', 'vpl', 'attendance', 'workshop', 'scorm', 'lesson', 'lti', 'forum');
+    $listmods = array();
+
+    //Get list mods
+    $sql = "
+      SELECT DISTINCT itemmodule
+      FROM {grade_items}
+      WHERE itemmodule IS NOT NULL
+    ";
+
+    $result = $DB->get_records_sql($sql);
+
+    foreach($result as $item){
+        if($item->itemmodule != 'quiz'){
+            $listmods[] = $item->itemmodule;
+        }
+    }
 
     //Start test time execute
     $start = microtime(true);
@@ -90,10 +114,12 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             gi.id,
             c.shortname AS course_name,
             c.idnumber AS course_idnumber,
-            gi.iteminstance AS moodle_id,
+            
+            IF(gi.itemtype='category', gi.iteminstance+".SETTINGSCATEGORYOFFSET.", gi.iteminstance ) AS moodle_id,            
+            
             IF(gi.itemtype='category', gc.fullname, a.name ) AS assign_name,
             gi.aggregationcoef2*100 AS weight,
-            IF(gi.hidden = 0, 1, 0 ) AS obligatory,
+            IF(gi.hidden = 0, 1, '' ) AS obligatory,
             gi.gradepass AS pass_grade,
             IF(gi.itemtype='category', 
                 (
@@ -140,14 +166,22 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
         //If used in download file
         if (!empty($postdata) and isset($postdata->exportfile)) {
             $attributes = array($postdata->startdate, $postdata->enddate);
-            $year = '-' . $postdata->year;
-            $semester = '-' . $postdata->semester;
+
             $select = " 
-            WHERE (gi.itemmodule='".$mod."' OR gi.itemtype='category') 
-            AND GREATEST(a.timemodified, gi.timemodified) BETWEEN ? AND ? 
-            AND c.shortname LIKE('%" . $year . "%')
-            AND c.shortname LIKE('%" . $semester . "%')         
-         ";
+                WHERE (gi.itemmodule='".$mod."' OR gi.itemtype='category') 
+                AND GREATEST(a.timemodified, gi.timemodified) BETWEEN ? AND ?                       
+            ";
+
+            if($postdata->year != 0){
+                $year = '-' . $postdata->year;
+                $select .= " AND c.shortname LIKE('%" . $year . "%') ";
+            }
+
+            if($postdata->semester != '0'){
+                $semester = '-' . $postdata->semester;
+                $select .= " AND c.shortname LIKE('%" . $semester . "%') ";
+            }
+
         }
 
         $query .= $select;
@@ -160,7 +194,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
 
             //Prepare YEAR and SEMESTER
             $arrname = explode('-', $item->course_name);
-            $data[$num]['YEAR'] = (isset($arrname[3])) ? $arrname[3] : '';
+            $data[$num]['YEAR'] = (isset($arrname[3])) ? $arrname[3] - 1 : '';
             $data[$num]['SEMESTER'] = (isset($arrname[2])) ? SETTINGSTYPESEMESTER[preg_replace("/[^a-zA-Z]+/", "", $arrname[2])] : '';
 
             //Prepare SM_OBJID and E_OBJID

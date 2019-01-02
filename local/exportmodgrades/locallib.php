@@ -48,6 +48,12 @@ define("GRADESTYPESEMESTER", array(
     'C' => '003',
 ));
 
+define("GRADESTYPESEMESTERVIEW", array(
+    'A' => get_string('char_a', 'local_exportmodgrades'),
+    'B' => get_string('char_b', 'local_exportmodgrades'),
+    'C' => get_string('char_c', 'local_exportmodgrades'),
+));
+
 function local_exportmodgrades_generate_output_csv($output, $postdata = array()){
     global $DB;
 
@@ -104,13 +110,19 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
     //If used in download file
     if(!empty($postdata) and isset($postdata->exportfile)){
         $attributes = array($postdata->startdate, $postdata->enddate);
-        $year = '-'.$postdata->year;
-        $semester = '-'.$postdata->semester;
         $select = " 
-            WHERE GREATEST(a.timemodified, ag.timemodified) BETWEEN ? AND ? 
-            AND c.shortname LIKE('%".$year."%')
-            AND c.shortname LIKE('%".$semester."%')         
+            WHERE GREATEST(a.timemodified, ag.timemodified) BETWEEN ? AND ?
          ";
+
+        if($postdata->year != 0){
+            $year = '-' . $postdata->year;
+            $select .= " AND c.shortname LIKE('%" . $year . "%') ";
+        }
+
+        if($postdata->semester != '0'){
+            $semester = '-' . $postdata->semester;
+            $select .= " AND c.shortname LIKE('%" . $semester . "%') ";
+        }
     }
 
     $query .= $select;

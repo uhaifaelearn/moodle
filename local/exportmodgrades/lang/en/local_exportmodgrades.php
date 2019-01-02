@@ -32,10 +32,14 @@ $string['cron_settings'] = 'Cron settings';
 $string['export_file'] = 'Export file';
 $string['year'] = 'Year';
 $string['semester'] = 'Semester';
-$string['start_date'] = 'Start date';
-$string['end_date'] = 'End date';
-$string['crontime'] = 'How to run automatically';
+$string['start_date'] = 'From change date';
+$string['end_date'] = 'Until date of change';
+$string['crontime'] = 'Automatic execution period';
 $string['twodays'] = 'two days';
+
+$string['char_a'] = 'a';
+$string['char_b'] = 'b';
+$string['char_c'] = 'c';
 
 //errors
 $string['empty_field'] = 'Empty field';

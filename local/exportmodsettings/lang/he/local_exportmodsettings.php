@@ -32,14 +32,18 @@ $string['cron_settings'] = 'Cron settings';
 $string['export_file'] = 'ייצוא קובץ';
 $string['year'] = 'שנה';
 $string['semester'] = 'סמסטר';
-$string['start_date'] = 'תחילת תאריך';
-$string['end_date'] = 'סיום תאריך';
-$string['crontime'] = 'הגדרות אופן הרצה אוטומטית';
+$string['start_date'] = 'מתאריך שינוי';
+$string['end_date'] = 'עד תאריך שינוי';
+$string['crontime'] = 'הגדרת אופן הרצה אוטומטית';
 $string['twodays'] = 'יומיים';
 
 $string['type_assign_1'] = 'מטלת אב';
 $string['type_assign_2'] = 'מטלת בן';
 $string['type_assign_3'] = 'מטלה רגילה';
+
+$string['char_a'] = 'א';
+$string['char_b'] = 'ב';
+$string['char_c'] = 'ג';
 
 //errors
 $string['empty_field'] = 'שדה ריק';

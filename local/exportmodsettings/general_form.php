@@ -33,7 +33,9 @@ class general_form extends moodleform {
         $attributes = array();
         $selectyears = array();
         $currentyear = date("Y");
-        for($i = $currentyear-50; $i < $currentyear+50; $i++){
+
+        $selectyears[0] =  get_string('all');
+        for($i = $currentyear-9; $i < $currentyear+1; $i++){
             $selectyears[$i] = $i;
         }
 
@@ -42,12 +44,16 @@ class general_form extends moodleform {
 
         //Semester
         $attributes = array();
-        $select = $mform->addElement('select', 'semester', get_string('semester', 'local_exportmodsettings'), SETTINGSTYPESEMESTER, $attributes);
+        $select = $mform->addElement('select', 'semester', get_string('semester', 'local_exportmodsettings'), SETTINGSTYPESEMESTERVIEW, $attributes);
         $select->setMultiple(false);
 
         //Date
         $mform->addElement('date_selector', 'startdate', get_string('start_date', 'local_exportmodsettings'));
         $mform->addElement('date_selector', 'enddate', get_string('end_date', 'local_exportmodsettings'));
+
+        //Set default date
+        $defaulttime = time() - 30*24*60*60;
+        $mform->setDefault('startdate',  $defaulttime);
 
         $mform->addElement('submit', 'exportfile', get_string('export_file', 'local_exportmodsettings'));
 
@@ -77,7 +83,8 @@ class general_form extends moodleform {
             $defaultdata['crontime'] = $row->value;
         }
 
-        $defaultdata['year'] = date("Y");
+        //$defaultdata['year'] = date("Y");
+        $defaultdata['year'] = 0;
 
         parent::set_data($defaultdata);
     }

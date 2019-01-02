@@ -42,12 +42,16 @@ class general_form extends moodleform {
 
         //Semester
         $attributes = array();
-        $select = $mform->addElement('select', 'semester', get_string('semester', 'local_exportmodgrades'), GRADESTYPESEMESTER, $attributes);
+        $select = $mform->addElement('select', 'semester', get_string('semester', 'local_exportmodgrades'), GRADESTYPESEMESTERVIEW, $attributes);
         $select->setMultiple(false);
 
         //Date
         $mform->addElement('date_selector', 'startdate', get_string('start_date', 'local_exportmodgrades'));
         $mform->addElement('date_selector', 'enddate', get_string('end_date', 'local_exportmodgrades'));
+
+        //Set default date
+        $defaulttime = time() - 30*24*60*60;
+        $mform->setDefault('startdate',  $defaulttime);
 
         $mform->addElement('submit', 'exportfile', get_string('export_file', 'local_exportmodgrades'));
 
