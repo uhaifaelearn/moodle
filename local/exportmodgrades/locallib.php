@@ -133,15 +133,26 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
 
         //Prepare YEAR and SEMESTER
         $arrname = explode('-', $item->course_name);
-        $data[$num]['YEAR'] = (isset($arrname[3])) ? $arrname[3] : '';
-        $data[$num]['SEMESTER'] = (isset($arrname[2])) ? GRADESTYPESEMESTER[preg_replace("/[^a-zA-Z]+/", "", $arrname[2])] : '';
+        $yearvalue = (isset($arrname[3])) ? $arrname[3] - 1 : '';
+        $semestrvalue = (isset($arrname[2])) ? SETTINGSTYPESEMESTER[preg_replace("/[^a-zA-Z]+/", "", $arrname[2])] : '';
 
         //Prepare SM_OBJID and E_OBJID
         $arridnumber = explode('-', $item->course_idnumber);
-        $data[$num]['SM_OBJID'] = (isset($arridnumber[1])) ? $arridnumber[1] : '';
-        $data[$num]['E_OBJID'] = (isset($arridnumber[0])) ? $arridnumber[0] : '';
-        $data[$num]['MOODLE_ID'] = $item->moodle_id;
+        $smobjid = (isset($arridnumber[1])) ? $arridnumber[1] : '';
+        $eobjid = (isset($arridnumber[0])) ? $arridnumber[0] : '';
 
+        //Validation
+        if(empty($yearvalue) || strlen($yearvalue) != 4 || !is_numeric($yearvalue)) continue;
+        if(empty($semestrvalue)) continue;
+        if(empty($smobjid) || !is_numeric($smobjid)) continue;
+        if(empty($eobjid) || !is_numeric($eobjid)) continue;
+
+        $data[$num]['YEAR'] = $yearvalue;
+        $data[$num]['SEMESTER'] = $semestrvalue;
+        $data[$num]['SM_OBJID'] = $smobjid;
+        $data[$num]['E_OBJID'] = $eobjid;
+
+        $data[$num]['MOODLE_ID'] = $item->moodle_id;
         $data[$num]['Student12'] = $item->student12;
         $data[$num]['Grade'] = $item->grade;
         $data[$num]['Passed'] = '';
