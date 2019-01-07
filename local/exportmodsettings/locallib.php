@@ -225,7 +225,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             $data[$num]['SUPPORTIVE_GRADE'] = '';//???
 
             $data[$num]['ASSIGN_TYPE'] = (!empty($item->assign_type))?SETTINGSTYPEASSIGN[$item->assign_type]:'';
-            $data[$num]['LAST_UPDATED'] = date('Y-m-d', $item->last_updated);
+            $data[$num]['LAST_UPDATED'] = date('Ymd', $item->last_updated);
 
             $num++;
             $usedids[] = $item->id;
