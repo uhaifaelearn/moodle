@@ -225,7 +225,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             $data[$num]['SUPPORTIVE_GRADE'] = '';//???
 
             $data[$num]['ASSIGN_TYPE'] = (!empty($item->assign_type))?SETTINGSTYPEASSIGN[$item->assign_type]:'';
-            $data[$num]['LAST_UPDATED'] = $item->last_updated;
+            $data[$num]['LAST_UPDATED'] = date('Y-m-d', $item->last_updated);
 
             $num++;
             $usedids[] = $item->id;
@@ -251,7 +251,7 @@ function local_exportmodsettings_save_file_to_disk(){
     local_exportmodsettings_log_file_success('Start cron');
 
     $folderPath = $CFG->dataroot.'/sap';
-    $filename = 'MoodleAssignSettings_'.date("Y_m_d_H_i_s").'.csv';
+    $filename = 'MoodleAssg-'.date("Ymd").'.csv';
     $pathToFile = $folderPath.'/'.$filename;
 
     //Create folder if not exists
@@ -279,7 +279,7 @@ function local_exportmodsettings_download_file($postdata){
 
     local_exportmodsettings_log_file_success('Start download');
 
-    $filename = 'MoodleAssignSettings_'.date("Y_m_d_H_i_s").'.csv';
+    $filename = 'MoodleAssg-'.date("Ymd").'.csv';
 
     header("Content-type: application/csv");
     header("Content-Disposition: attachment; filename=".$filename);
