@@ -132,7 +132,7 @@ class GradeExport extends grade_export
 
             $obj_tmp->SM_Objid = $sapid;
           //  $obj_tmp->ST_Objid = str_pad($user->idnumber, 8, '0', STR_PAD_LEFT);
-            //$obj_tmp->ST_Objid = '';
+            $obj_tmp->ST_Objid = $eventid;
             $obj_tmp->Student12 = str_pad($user->idnumber, 12, '0', STR_PAD_LEFT);
             $obj_tmp->Lecturer_ID = $teacher_id;
 
@@ -164,7 +164,7 @@ class GradeExport extends grade_export
         $arr_shortname = explode('-', $shortname);
         $year = date("Y");
         $moad = $grade_option==0?1:$grade_option;
-        $event = $this->course->idnumber;
+        $event = $eventid;
         $code = '0002';
         $date = date("Ymd");   ;
 
@@ -185,7 +185,7 @@ class GradeExport extends grade_export
         }
 
         //Name of filename
-        $filename = $sapid.$year.$semestr.$moad.$event.'-'.$code.'-'.$date;
+        $filename = $sapid.$year.$semestr.$moad.$eventid.'-'.$code.'-'.$date;
 
         $downloadfilename = clean_filename ( $filename );
 
