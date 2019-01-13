@@ -84,116 +84,94 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         'LAST_UPDATED',
     );
 
-    $listmods = array();
-
-    //Get list mods
-    $sql = "
-      SELECT DISTINCT itemmodule
-      FROM {grade_items}
-      WHERE itemmodule IS NOT NULL
-    ";
-
-    $result = $DB->get_records_sql($sql);
-
-    foreach($result as $item){
-        if($item->itemmodule != 'quiz'){
-            $listmods[] = $item->itemmodule;
-        }
-    }
-
     //Start test time execute
     $start = microtime(true);
 
-    foreach($listmods as $mod) {
-
-        $query ="
+    $query ="
         SELECT 
-            ag.id,
+            gi.id,
             c.shortname AS course_name,
             c.idnumber AS course_idnumber,
-            ag.assignment AS moodle_id,
-            ag.userid AS student12,
-            ag.grade AS grade,
-            
-            GREATEST(a.timemodified, ag.timemodified) AS last_updated        
-        FROM {assign_grades} AS ag
-        LEFT JOIN {assign} AS a ON (a.id = ag.assignment)
-        LEFT JOIN {course} AS c ON (c.id = a.course)
-         
+            gi.iteminstance AS moodle_id,
+            gg.userid AS student12,
+            gg.finalgrade AS grade,
+            gg.timemodified AS last_updated                
+        
+        FROM mdl_grade_grades AS gg
+	    LEFT JOIN mdl_grade_items AS gi ON (gg.itemid = gi.id)
+	    LEFT JOIN mdl_course AS c ON (c.id = gi.courseid)
     ";
 
-        //If used in cron
-        if(empty($postdata)){
-            $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'crontime'));
-            $periodago = GRADESCRONPERIODS[$row->value];
+    //If used in cron
+    if(empty($postdata)){
+        $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'crontime'));
+        $periodago = GRADESCRONPERIODS[$row->value];
 
-            if($periodago != 0) {
-                $attributes = array(time() - $periodago);
-                $select = " WHERE GREATEST(a.timemodified, ag.timemodified) > ?  ";
-            }else{
-                $attributes = array();
-                $select = "";
-            }
-        }
-
-        //If used in download file
-        if(!empty($postdata) and isset($postdata->exportfile)){
-            $attributes = array($postdata->startdate, $postdata->enddate);
-            $select = " 
-            WHERE GREATEST(a.timemodified, ag.timemodified) BETWEEN ? AND ?
-         ";
-
-            if($postdata->year != 0){
-                $year = '-' . $postdata->year;
-                $select .= " AND c.shortname LIKE('%" . $year . "%') ";
-            }
-
-            if($postdata->semester != '0'){
-                $semester = '-' . $postdata->semester;
-                $select .= " AND c.shortname LIKE('%" . $semester . "%') ";
-            }
-        }
-
-        $query .= $select;
-
-        $result = $DB->get_records_sql($query, $attributes);
-
-        foreach ($result as $item) {
-
-            if(in_array($item->id, $usedids)) continue;
-
-            //Prepare YEAR and SEMESTER
-            $arrname = explode('-', $item->course_name);
-            $yearvalue = (isset($arrname[3])) ? $arrname[3] - 1 : '';
-            $semestrvalue = (isset($arrname[2])) ? GRADESTYPESEMESTER[preg_replace("/[^a-zA-Z]+/", "", $arrname[2])] : '';
-
-            //Prepare SM_OBJID and E_OBJID
-            $arridnumber = explode('-', $item->course_idnumber);
-            $smobjid = (isset($arridnumber[1])) ? $arridnumber[1] : '';
-            $eobjid = (isset($arridnumber[0])) ? $arridnumber[0] : '';
-
-            //Validation
-            if(empty($yearvalue) || strlen($yearvalue) != 4 || !is_numeric($yearvalue)) continue;
-            if(empty($semestrvalue)) continue;
-            if(empty($smobjid) || !is_numeric($smobjid)) continue;
-            if(empty($eobjid) || !is_numeric($eobjid)) continue;
-
-            $data[$num]['YEAR'] = $yearvalue;
-            $data[$num]['SEMESTER'] = $semestrvalue;
-            $data[$num]['SM_OBJID'] = $smobjid;
-            $data[$num]['E_OBJID'] = $eobjid;
-
-            $data[$num]['MOODLE_ID'] = $item->moodle_id;
-            $data[$num]['Student12'] = $item->student12;
-            $data[$num]['Grade'] = $item->grade;
-            $data[$num]['Passed'] = '';
-
-            $data[$num]['LAST_UPDATED'] = date('Ymd', $item->last_updated);
-
-            $num++;
-            $usedids[] = $item->id;
+        if($periodago != 0) {
+            $attributes = array(time() - $periodago);
+            $select = " WHERE gg.finalgrade IS NOT NULL AND gg.timemodified > ? ";
+        }else{
+            $attributes = array();
+            $select = " WHERE gg.finalgrade IS NOT NULL ";
         }
     }
+
+    //If used in download file
+    if(!empty($postdata) and isset($postdata->exportfile)){
+        $attributes = array($postdata->startdate, $postdata->enddate);
+        $select = "        
+            WHERE gg.finalgrade IS NOT NULL AND gg.timemodified BETWEEN ? AND ?
+        ";
+
+        if($postdata->year != 0){
+            $year = '-' . $postdata->year;
+            $select .= " AND c.shortname LIKE('%" . $year . "%') ";
+        }
+
+        if($postdata->semester != '0'){
+            $semester = '-' . $postdata->semester;
+            $select .= " AND c.shortname LIKE('%" . $semester . "%') ";
+        }
+    }
+
+    $query .= $select;
+
+    $result = $DB->get_records_sql($query, $attributes);
+
+    foreach ($result as $item) {
+
+        //Prepare YEAR and SEMESTER
+        $arrname = explode('-', $item->course_name);
+        $yearvalue = (isset($arrname[3])) ? $arrname[3] - 1 : '';
+        $semestrvalue = (isset($arrname[2])) ? GRADESTYPESEMESTER[preg_replace("/[^a-zA-Z]+/", "", $arrname[2])] : '';
+
+        //Prepare SM_OBJID and E_OBJID
+        $arridnumber = explode('-', $item->course_idnumber);
+        $smobjid = (isset($arridnumber[1])) ? $arridnumber[1] : '';
+        $eobjid = (isset($arridnumber[0])) ? $arridnumber[0] : '';
+
+        //Validation
+        if(empty($yearvalue) || strlen($yearvalue) != 4 || !is_numeric($yearvalue)) continue;
+        if(empty($semestrvalue)) continue;
+        if(empty($smobjid) || !is_numeric($smobjid)) continue;
+        if(empty($eobjid) || !is_numeric($eobjid)) continue;
+
+        $data[$num]['YEAR'] = $yearvalue;
+        $data[$num]['SEMESTER'] = $semestrvalue;
+        $data[$num]['SM_OBJID'] = $smobjid;
+        $data[$num]['E_OBJID'] = $eobjid;
+
+        $data[$num]['MOODLE_ID'] = $item->moodle_id;
+        $data[$num]['Student12'] = $item->student12;
+        $data[$num]['Grade'] = $item->grade;
+        $data[$num]['Passed'] = '';
+
+        $data[$num]['LAST_UPDATED'] = date('Ymd', $item->last_updated);
+
+        $num++;
+        $usedids[] = $item->id;
+    }
+
 
     $time_elapsed_secs = microtime(true) - $start;
     local_exportmodgrades_log_file_success('Process took  '.$time_elapsed_secs.' sec');
