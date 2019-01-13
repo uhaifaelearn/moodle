@@ -76,15 +76,11 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         'SM_OBJID',
         'E_OBJID',
         'MOODLE_ID',
-        'ASSIGN_NAME',
-        'WEIGHT',
-        'OBLIGATORY',
-        'PASS_GRADE',
-        'ASSIGN_REQ',
-        'ASSIGN_FOR_AVG',
-        'PARENT_ASSIGN',
-        'SUPPORTIVE_GRADE',
-        'ASSIGN_TYPE',
+
+        'Student12',
+        'Grade',
+        'Passed',
+
         'LAST_UPDATED',
     );
 
@@ -109,68 +105,43 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
     $start = microtime(true);
 
     foreach($listmods as $mod) {
-        $query = "
-        SELECT
-            gi.id,
+
+        $query ="
+        SELECT 
+            ag.id,
             c.shortname AS course_name,
             c.idnumber AS course_idnumber,
+            ag.assignment AS moodle_id,
+            ag.userid AS student12,
+            ag.grade AS grade,
             
-            IF(gi.itemtype='category', gi.iteminstance+".GRADESCATEGORYOFFSET.", gi.iteminstance ) AS moodle_id,            
-            
-            IF(gi.itemtype='category', gc.fullname, a.name ) AS assign_name,
-            gi.aggregationcoef2*100 AS weight,
-            IF(gi.hidden = 0, 1, '' ) AS obligatory,
-            gi.gradepass AS pass_grade,
-            IF(gi.itemtype='category', 
-                (
-                    SELECT COUNT(*)
-                    FROM {grade_items} AS sgi
-                    WHERE sgi.categoryid=gc.id AND sgi.hidden=0
-                )
-            , '' ) AS assign_req,
-            IF(gi.itemtype='category', 
-                (
-                    SELECT COUNT(*)
-                    FROM {grade_items} AS sgi
-                    WHERE sgi.categoryid=gc.id AND sgi.hidden=0
-                )
-            , '' ) AS assign_for_avg,
-            IF(gi.itemmodule='".$mod."', gi.categoryid, '' ) AS parent_assign,
-            
-            REPLACE(IF(gi.itemtype!='category', gcd.path, '' ),'/','') AS assign_type, 
-            
-            GREATEST(a.timemodified, gi.timemodified) AS last_updated
-            
-        FROM {grade_items} AS gi
-        LEFT JOIN {course} AS c ON (c.id = gi.courseid)        
-        LEFT JOIN {grade_categories} AS gc ON (gc.id = gi.iteminstance)
-        LEFT JOIN {grade_categories} AS gcd ON (gcd.id = gi.categoryid)
-        LEFT JOIN {".$mod."} AS a ON (a.id = gi.iteminstance)         
+            GREATEST(a.timemodified, ag.timemodified) AS last_updated        
+        FROM {assign_grades} AS ag
+        LEFT JOIN {assign} AS a ON (a.id = ag.assignment)
+        LEFT JOIN {course} AS c ON (c.id = a.course)
+         
     ";
 
         //If used in cron
-        if (empty($postdata)) {
+        if(empty($postdata)){
             $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'crontime'));
             $periodago = GRADESCRONPERIODS[$row->value];
 
-            if ($periodago != 0) {
+            if($periodago != 0) {
                 $attributes = array(time() - $periodago);
-                $select = " WHERE (gi.itemmodule='".$mod."' OR gi.itemtype='category') 
-                    AND GREATEST(a.timemodified, gi.timemodified) > ?  ";
-            } else {
+                $select = " WHERE GREATEST(a.timemodified, ag.timemodified) > ?  ";
+            }else{
                 $attributes = array();
-                $select = " WHERE (gi.itemmodule='".$mod."' OR gi.itemtype='category') ";
+                $select = "";
             }
         }
 
         //If used in download file
-        if (!empty($postdata) and isset($postdata->exportfile)) {
+        if(!empty($postdata) and isset($postdata->exportfile)){
             $attributes = array($postdata->startdate, $postdata->enddate);
-
             $select = " 
-                WHERE (gi.itemmodule='".$mod."' OR gi.itemtype='category') 
-                AND GREATEST(a.timemodified, gi.timemodified) BETWEEN ? AND ?                       
-            ";
+            WHERE GREATEST(a.timemodified, ag.timemodified) BETWEEN ? AND ?
+         ";
 
             if($postdata->year != 0){
                 $year = '-' . $postdata->year;
@@ -181,7 +152,6 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
                 $semester = '-' . $postdata->semester;
                 $select .= " AND c.shortname LIKE('%" . $semester . "%') ";
             }
-
         }
 
         $query .= $select;
@@ -214,17 +184,10 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
             $data[$num]['E_OBJID'] = $eobjid;
 
             $data[$num]['MOODLE_ID'] = $item->moodle_id;
-            $data[$num]['ASSIGN_NAME'] = $item->assign_name;
-            $data[$num]['WEIGHT'] = $item->weight;
-            $data[$num]['OBLIGATORY'] = $item->obligatory;
-            $data[$num]['PASS_GRADE'] = $item->pass_grade;
+            $data[$num]['Student12'] = $item->student12;
+            $data[$num]['Grade'] = $item->grade;
+            $data[$num]['Passed'] = '';
 
-            $data[$num]['ASSIGN_REQ'] = $item->assign_req;
-            $data[$num]['ASSIGN_FOR_AVG'] = $item->assign_for_avg;
-            $data[$num]['PARENT_ASSIGN'] = $item->parent_assign;
-            $data[$num]['SUPPORTIVE_GRADE'] = '';//???
-
-            $data[$num]['ASSIGN_TYPE'] = (!empty($item->assign_type))?GRADESTYPEASSIGN[$item->assign_type]:'';
             $data[$num]['LAST_UPDATED'] = date('Ymd', $item->last_updated);
 
             $num++;
