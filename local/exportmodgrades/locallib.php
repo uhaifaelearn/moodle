@@ -23,7 +23,7 @@
 
 
 /**
- * Hook function to extend the course settings navigation. Call all context functions
+ * Hook function to extend the course grades navigation. Call all context functions
  */
 
 define("GRADESCRONPERIODSSELECT", array(
@@ -49,16 +49,26 @@ define("GRADESTYPESEMESTER", array(
 ));
 
 define("GRADESTYPESEMESTERVIEW", array(
+    '0' => get_string('all'),
     'A' => get_string('char_a', 'local_exportmodgrades'),
     'B' => get_string('char_b', 'local_exportmodgrades'),
     'C' => get_string('char_c', 'local_exportmodgrades'),
 ));
+
+define("GRADESTYPEASSIGN", array(
+    '1' => get_string('type_assign_1', 'local_exportmodgrades'),
+    '11' => get_string('type_assign_2', 'local_exportmodgrades'),
+    '12' => get_string('type_assign_3', 'local_exportmodgrades'),
+));
+
+define("GRADESCATEGORYOFFSET", 90000);
 
 function local_exportmodgrades_generate_output_csv($output, $postdata = array()){
     global $DB;
 
     $num = 0;
     $data = array();
+    $usedids = array();
 
     $headers = array(
         'YEAR',
@@ -66,100 +76,160 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         'SM_OBJID',
         'E_OBJID',
         'MOODLE_ID',
-
-        'Student12',
-        'Grade',
-        'Passed',
-
+        'ASSIGN_NAME',
+        'WEIGHT',
+        'OBLIGATORY',
+        'PASS_GRADE',
+        'ASSIGN_REQ',
+        'ASSIGN_FOR_AVG',
+        'PARENT_ASSIGN',
+        'SUPPORTIVE_GRADE',
+        'ASSIGN_TYPE',
         'LAST_UPDATED',
     );
+
+    $listmods = array();
+
+    //Get list mods
+    $sql = "
+      SELECT DISTINCT itemmodule
+      FROM {grade_items}
+      WHERE itemmodule IS NOT NULL
+    ";
+
+    $result = $DB->get_records_sql($sql);
+
+    foreach($result as $item){
+        if($item->itemmodule != 'quiz'){
+            $listmods[] = $item->itemmodule;
+        }
+    }
 
     //Start test time execute
     $start = microtime(true);
 
-    $query ="
-        SELECT 
-            ag.id,
+    foreach($listmods as $mod) {
+        $query = "
+        SELECT
+            gi.id,
             c.shortname AS course_name,
             c.idnumber AS course_idnumber,
-            ag.assignment AS moodle_id,
-            ag.userid AS student12,
-            ag.grade AS grade,
             
-            GREATEST(a.timemodified, ag.timemodified) AS last_updated        
-        FROM {assign_grades} AS ag
-        LEFT JOIN {assign} AS a ON (a.id = ag.assignment)
-        LEFT JOIN {course} AS c ON (c.id = a.course)
-         
+            IF(gi.itemtype='category', gi.iteminstance+".GRADESCATEGORYOFFSET.", gi.iteminstance ) AS moodle_id,            
+            
+            IF(gi.itemtype='category', gc.fullname, a.name ) AS assign_name,
+            gi.aggregationcoef2*100 AS weight,
+            IF(gi.hidden = 0, 1, '' ) AS obligatory,
+            gi.gradepass AS pass_grade,
+            IF(gi.itemtype='category', 
+                (
+                    SELECT COUNT(*)
+                    FROM {grade_items} AS sgi
+                    WHERE sgi.categoryid=gc.id AND sgi.hidden=0
+                )
+            , '' ) AS assign_req,
+            IF(gi.itemtype='category', 
+                (
+                    SELECT COUNT(*)
+                    FROM {grade_items} AS sgi
+                    WHERE sgi.categoryid=gc.id AND sgi.hidden=0
+                )
+            , '' ) AS assign_for_avg,
+            IF(gi.itemmodule='".$mod."', gi.categoryid, '' ) AS parent_assign,
+            
+            REPLACE(IF(gi.itemtype!='category', gcd.path, '' ),'/','') AS assign_type, 
+            
+            GREATEST(a.timemodified, gi.timemodified) AS last_updated
+            
+        FROM {grade_items} AS gi
+        LEFT JOIN {course} AS c ON (c.id = gi.courseid)        
+        LEFT JOIN {grade_categories} AS gc ON (gc.id = gi.iteminstance)
+        LEFT JOIN {grade_categories} AS gcd ON (gcd.id = gi.categoryid)
+        LEFT JOIN {".$mod."} AS a ON (a.id = gi.iteminstance)         
     ";
 
-    //If used in cron
-    if(empty($postdata)){
-        $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'crontime'));
-        $periodago = GRADESCRONPERIODS[$row->value];
+        //If used in cron
+        if (empty($postdata)) {
+            $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'crontime'));
+            $periodago = GRADESCRONPERIODS[$row->value];
 
-        if($periodago != 0) {
-            $attributes = array(time() - $periodago);
-            $select = " WHERE GREATEST(a.timemodified, ag.timemodified) > ?  ";
-        }else{
-            $attributes = array();
-            $select = "";
-        }
-    }
-
-    //If used in download file
-    if(!empty($postdata) and isset($postdata->exportfile)){
-        $attributes = array($postdata->startdate, $postdata->enddate);
-        $select = " 
-            WHERE GREATEST(a.timemodified, ag.timemodified) BETWEEN ? AND ?
-         ";
-
-        if($postdata->year != 0){
-            $year = '-' . $postdata->year;
-            $select .= " AND c.shortname LIKE('%" . $year . "%') ";
+            if ($periodago != 0) {
+                $attributes = array(time() - $periodago);
+                $select = " WHERE (gi.itemmodule='".$mod."' OR gi.itemtype='category') 
+                    AND GREATEST(a.timemodified, gi.timemodified) > ?  ";
+            } else {
+                $attributes = array();
+                $select = " WHERE (gi.itemmodule='".$mod."' OR gi.itemtype='category') ";
+            }
         }
 
-        if($postdata->semester != '0'){
-            $semester = '-' . $postdata->semester;
-            $select .= " AND c.shortname LIKE('%" . $semester . "%') ";
+        //If used in download file
+        if (!empty($postdata) and isset($postdata->exportfile)) {
+            $attributes = array($postdata->startdate, $postdata->enddate);
+
+            $select = " 
+                WHERE (gi.itemmodule='".$mod."' OR gi.itemtype='category') 
+                AND GREATEST(a.timemodified, gi.timemodified) BETWEEN ? AND ?                       
+            ";
+
+            if($postdata->year != 0){
+                $year = '-' . $postdata->year;
+                $select .= " AND c.shortname LIKE('%" . $year . "%') ";
+            }
+
+            if($postdata->semester != '0'){
+                $semester = '-' . $postdata->semester;
+                $select .= " AND c.shortname LIKE('%" . $semester . "%') ";
+            }
+
         }
-    }
 
-    $query .= $select;
+        $query .= $select;
 
-    $result = $DB->get_records_sql($query, $attributes);
+        $result = $DB->get_records_sql($query, $attributes);
 
-    foreach ($result as $item) {
+        foreach ($result as $item) {
 
-        //Prepare YEAR and SEMESTER
-        $arrname = explode('-', $item->course_name);
-        $yearvalue = (isset($arrname[3])) ? $arrname[3] - 1 : '';
-        $semestrvalue = (isset($arrname[2])) ? SETTINGSTYPESEMESTER[preg_replace("/[^a-zA-Z]+/", "", $arrname[2])] : '';
+            if(in_array($item->id, $usedids)) continue;
 
-        //Prepare SM_OBJID and E_OBJID
-        $arridnumber = explode('-', $item->course_idnumber);
-        $smobjid = (isset($arridnumber[1])) ? $arridnumber[1] : '';
-        $eobjid = (isset($arridnumber[0])) ? $arridnumber[0] : '';
+            //Prepare YEAR and SEMESTER
+            $arrname = explode('-', $item->course_name);
+            $yearvalue = (isset($arrname[3])) ? $arrname[3] - 1 : '';
+            $semestrvalue = (isset($arrname[2])) ? GRADESTYPESEMESTER[preg_replace("/[^a-zA-Z]+/", "", $arrname[2])] : '';
 
-        //Validation
-        if(empty($yearvalue) || strlen($yearvalue) != 4 || !is_numeric($yearvalue)) continue;
-        if(empty($semestrvalue)) continue;
-        if(empty($smobjid) || !is_numeric($smobjid)) continue;
-        if(empty($eobjid) || !is_numeric($eobjid)) continue;
+            //Prepare SM_OBJID and E_OBJID
+            $arridnumber = explode('-', $item->course_idnumber);
+            $smobjid = (isset($arridnumber[1])) ? $arridnumber[1] : '';
+            $eobjid = (isset($arridnumber[0])) ? $arridnumber[0] : '';
 
-        $data[$num]['YEAR'] = $yearvalue;
-        $data[$num]['SEMESTER'] = $semestrvalue;
-        $data[$num]['SM_OBJID'] = $smobjid;
-        $data[$num]['E_OBJID'] = $eobjid;
+            //Validation
+            if(empty($yearvalue) || strlen($yearvalue) != 4 || !is_numeric($yearvalue)) continue;
+            if(empty($semestrvalue)) continue;
+            if(empty($smobjid) || !is_numeric($smobjid)) continue;
+            if(empty($eobjid) || !is_numeric($eobjid)) continue;
 
-        $data[$num]['MOODLE_ID'] = $item->moodle_id;
-        $data[$num]['Student12'] = $item->student12;
-        $data[$num]['Grade'] = $item->grade;
-        $data[$num]['Passed'] = '';
+            $data[$num]['YEAR'] = $yearvalue;
+            $data[$num]['SEMESTER'] = $semestrvalue;
+            $data[$num]['SM_OBJID'] = $smobjid;
+            $data[$num]['E_OBJID'] = $eobjid;
 
-        $data[$num]['LAST_UPDATED'] = $item->last_updated;
+            $data[$num]['MOODLE_ID'] = $item->moodle_id;
+            $data[$num]['ASSIGN_NAME'] = $item->assign_name;
+            $data[$num]['WEIGHT'] = $item->weight;
+            $data[$num]['OBLIGATORY'] = $item->obligatory;
+            $data[$num]['PASS_GRADE'] = $item->pass_grade;
 
-        $num++;
+            $data[$num]['ASSIGN_REQ'] = $item->assign_req;
+            $data[$num]['ASSIGN_FOR_AVG'] = $item->assign_for_avg;
+            $data[$num]['PARENT_ASSIGN'] = $item->parent_assign;
+            $data[$num]['SUPPORTIVE_GRADE'] = '';//???
+
+            $data[$num]['ASSIGN_TYPE'] = (!empty($item->assign_type))?GRADESTYPEASSIGN[$item->assign_type]:'';
+            $data[$num]['LAST_UPDATED'] = date('Ymd', $item->last_updated);
+
+            $num++;
+            $usedids[] = $item->id;
+        }
     }
 
     $time_elapsed_secs = microtime(true) - $start;
@@ -181,7 +251,7 @@ function local_exportmodgrades_save_file_to_disk(){
     local_exportmodgrades_log_file_success('Start cron');
 
     $folderPath = $CFG->dataroot.'/sap';
-    $filename = 'MoodleAssignGrades_'.date("Y_m_d_H_i_s").'.csv';
+    $filename = 'MoodleGrades-'.date("Ymd").'.csv';
     $pathToFile = $folderPath.'/'.$filename;
 
     //Create folder if not exists
@@ -209,7 +279,7 @@ function local_exportmodgrades_download_file($postdata){
 
     local_exportmodgrades_log_file_success('Start download');
 
-    $filename = 'MoodleAssignGrades_'.date("Y_m_d_H_i_s").'.csv';
+    $filename = 'MoodleAssg-'.date("Ymd").'.csv';
 
     header("Content-type: application/csv");
     header("Content-Disposition: attachment; filename=".$filename);

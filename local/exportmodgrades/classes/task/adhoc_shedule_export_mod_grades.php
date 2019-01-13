@@ -55,7 +55,7 @@ class adhoc_shedule_export_mod_grades extends \core\task\adhoc_task {
         global $CFG, $DB, $USER;
         require_once($CFG->dirroot . '/local/exportmodgrades/locallib.php');
 
-        $lockkey = 'export_grades';
+        $lockkey = 'export_mod';
         $lockfactory = \core\lock\lock_config::get_lock_factory('local_exportmodgrades_task');
         $lock = $lockfactory->get_lock($lockkey, 0);
 

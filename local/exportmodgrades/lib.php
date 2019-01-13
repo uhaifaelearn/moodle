@@ -23,5 +23,5 @@
 
 
 /**
- * Hook function to extend the course settings navigation. Call all context functions
+ * Hook function to extend the course grades navigation. Call all context functions
  */

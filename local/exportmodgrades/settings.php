@@ -27,14 +27,14 @@
 defined('MOODLE_INTERNAL') || die();
 
 if ($hassiteconfig) { 
-    // New settings page.
+    // New grades page.
     $page = new admin_settingpage('local_exportmodgrades',
         get_string('pluginname', 'local_exportmodgrades', null, true));
 		
     if ($ADMIN->fulltree) {
 
     }
-    // Add settings page to the appearance settings category.
+    // Add grades page to the appearance grades category.
     $ADMIN->add('appearance', $page);		
 
 }

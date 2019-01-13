@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 $string['pluginname'] = 'Export mod grades';
 $string['page_index'] = 'Settings and export mod grades';
 $string['export_mod'] = 'Export mod grades';
-$string['cron_settings'] = 'Cron settings';
+$string['cron_grades'] = 'Cron grades';
 $string['export_file'] = 'ייצוא קובץ';
 $string['year'] = 'שנה';
 $string['semester'] = 'סמסטר';
@@ -36,6 +36,10 @@ $string['start_date'] = 'מתאריך שינוי';
 $string['end_date'] = 'עד תאריך שינוי';
 $string['crontime'] = 'הגדרת אופן הרצה אוטומטית';
 $string['twodays'] = 'יומיים';
+
+$string['type_assign_1'] = 'מטלת אב';
+$string['type_assign_2'] = 'מטלת בן';
+$string['type_assign_3'] = 'מטלה רגילה';
 
 $string['char_a'] = 'א';
 $string['char_b'] = 'ב';

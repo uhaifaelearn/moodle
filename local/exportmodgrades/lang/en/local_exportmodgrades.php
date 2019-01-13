@@ -28,7 +28,7 @@ defined('MOODLE_INTERNAL') || die();
 $string['pluginname'] = 'Export mod grades';
 $string['page_index'] = 'Settings and export mod grades';
 $string['export_mod'] = 'Export mod grades';
-$string['cron_settings'] = 'Cron settings';
+$string['cron_grades'] = 'Cron grades';
 $string['export_file'] = 'Export file';
 $string['year'] = 'Year';
 $string['semester'] = 'Semester';
@@ -37,9 +37,13 @@ $string['end_date'] = 'Until date of change';
 $string['crontime'] = 'Automatic execution period';
 $string['twodays'] = 'two days';
 
-$string['char_a'] = 'a';
-$string['char_b'] = 'b';
-$string['char_c'] = 'c';
+$string['type_assign_1'] = 'מטלת אב';
+$string['type_assign_2'] = 'מטלת בן';
+$string['type_assign_3'] = 'מטלה רגילה';
+
+$string['char_a'] = 'A';
+$string['char_b'] = 'B';
+$string['char_c'] = 'C';
 
 //errors
 $string['empty_field'] = 'Empty field';

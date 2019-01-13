@@ -39,7 +39,7 @@ function xmldb_local_exportmodgrades_install() {
     $obj = new \stdClass();
     $obj->plugin = 'local_exportmodgrades';
     $obj->name = 'crontime';
-    $obj->value = $first_key;
+    $obj->value = $first_key + 1;
     $DB->insert_record('config_plugins', $obj);
 
     return true;

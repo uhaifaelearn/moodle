@@ -16,7 +16,7 @@ class general_form extends moodleform {
 		//$mform->setType('id', PARAM_RAW);
 
         //Cron time
-        $mform->addElement('header', 'general', get_string('cron_settings', 'local_exportmodgrades'));
+        $mform->addElement('header', 'general', get_string('cron_grades', 'local_exportmodgrades'));
         $mform->setExpanded('general', true);
 
         $attributes = array();
@@ -25,7 +25,7 @@ class general_form extends moodleform {
 
         $mform->addElement('submit', 'submitcrontime', get_string('savechanges'));
 
-        //export mod settings
+        //export mod grades
         $mform->addElement('header', 'export', get_string('export_mod', 'local_exportmodgrades'));
         $mform->setExpanded('export', true);
 
@@ -33,7 +33,9 @@ class general_form extends moodleform {
         $attributes = array();
         $selectyears = array();
         $currentyear = date("Y");
-        for($i = $currentyear-50; $i < $currentyear+50; $i++){
+
+        $selectyears[0] =  get_string('all');
+        for($i = $currentyear-9; $i < $currentyear+1; $i++){
             $selectyears[$i] = $i;
         }
 
@@ -81,7 +83,8 @@ class general_form extends moodleform {
             $defaultdata['crontime'] = $row->value;
         }
 
-        $defaultdata['year'] = date("Y");
+        //$defaultdata['year'] = date("Y");
+        $defaultdata['year'] = 0;
 
         parent::set_data($defaultdata);
     }
