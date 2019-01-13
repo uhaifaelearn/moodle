@@ -28,8 +28,8 @@ $tasks = array(
     array(
         'classname' => 'local_exportmodsettings\task\shedule_export_mod_settings',
         'blocking' => 0,
-        'minute' => '*/1',
-        'hour' => '*',
+        'minute' => '0',
+        'hour' => '5',
         'day' => '*',
         'dayofweek' => '*',
         'month' => '*',
