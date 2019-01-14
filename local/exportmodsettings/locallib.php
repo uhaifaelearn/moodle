@@ -245,10 +245,10 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
     return $output;
 }
 
-function local_exportmodsettings_save_file_to_disk(){
+function local_exportmodsettings_save_file_to_disk($postdata = array()){
     global $DB, $CFG;
 
-    local_exportmodsettings_log_file_success('Start cron');
+    local_exportmodsettings_log_file_success('Start save file to disk');
 
     $folderPath = $CFG->dataroot.'/sap';
     $filename = 'MoodleAssg-'.date("Ymd").'.csv';
@@ -263,39 +263,36 @@ function local_exportmodsettings_save_file_to_disk(){
 
     //If file present
     if(file_exists($pathToFile)){
-        local_exportmodsettings_log_file_error("File present ".$pathToFile);
-        //die("File present ".$pathToFile);
+        unlink($pathToFile);
     }
 
     $output = fopen($pathToFile,'w') or die("Can't open ".$pathToFile);
-    $output = local_exportmodsettings_generate_output_csv($output);
+    $output = local_exportmodsettings_generate_output_csv($output, $postdata);
     fclose($output) or die("Can't close ".$pathToFile);
 
-    local_exportmodsettings_log_file_success('End cron. Saved to file '.$filename);
+    local_exportmodsettings_log_file_success('End save file to disk. Saved to file '.$filename);
 }
 
 function local_exportmodsettings_download_file($postdata){
     global $DB, $CFG;
 
-    local_exportmodsettings_log_file_success('Start download');
+    local_exportmodsettings_save_file_to_disk($postdata);
 
+    $folderPath = $CFG->dataroot.'/sap';
     $filename = 'MoodleAssg-'.date("Ymd").'.csv';
+    $pathToFile = $folderPath.'/'.$filename;
 
     header("Content-type: application/csv");
     header("Content-Disposition: attachment; filename=".$filename);
 
-    $output = fopen('php://output', 'w');
-    $output = local_exportmodsettings_generate_output_csv($output, $postdata);
-    fclose($output);
-
-    local_exportmodsettings_log_file_success('End download');
+    readfile($pathToFile);
     exit;
 }
 
 function local_exportmodsettings_log_file($status, $str){
     global $DB, $CFG;
 
-    $folderPath = $CFG->dataroot.'/sap';
+    $folderPath = $CFG->dataroot;
     $filename = 'log_process_settings.txt';
     $pathToFile = $folderPath.'/'.$filename;
 
