@@ -191,6 +191,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
         foreach ($result as $item) {
 
             if(in_array($item->id, $usedids)) continue;
+            if($item->last_updated == null) continue;
 
             //Prepare YEAR and SEMESTER
             $arrname = explode('-', $item->course_name);

@@ -140,6 +140,8 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
 
     foreach ($result as $item) {
 
+        if($item->last_updated == null) continue;
+
         //Prepare YEAR and SEMESTER
         $arrname = explode('-', $item->course_name);
         $yearvalue = (isset($arrname[3])) ? $arrname[3] - 1 : '';
