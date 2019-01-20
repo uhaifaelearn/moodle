@@ -292,7 +292,7 @@ function local_exportmodsettings_download_file($postdata){
 function local_exportmodsettings_log_file($status, $str){
     global $DB, $CFG;
 
-    $folderPath = $CFG->dataroot;
+    $folderPath = $CFG->dataroot.'/sap_log';
     $filename = 'log_process_settings.txt';
     $pathToFile = $folderPath.'/'.$filename;
 

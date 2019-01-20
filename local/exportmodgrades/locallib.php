@@ -233,7 +233,7 @@ function local_exportmodgrades_download_file($postdata){
 function local_exportmodgrades_log_file($status, $str){
     global $DB, $CFG;
 
-    $folderPath = $CFG->dataroot;
+    $folderPath = $CFG->dataroot.'/sap_log';
     $filename = 'log_process_grades.txt';
     $pathToFile = $folderPath.'/'.$filename;
 
