@@ -56,7 +56,7 @@ define("SETTINGSTYPESEMESTERVIEW", array(
 ));
 
 define("SETTINGSTYPEASSIGN", array(
-    '10' => get_string('type_assign_1', 'local_exportmodsettings'),
+    '1' => get_string('type_assign_1', 'local_exportmodsettings'),
     '11' => get_string('type_assign_2', 'local_exportmodsettings'),
     '12' => get_string('type_assign_3', 'local_exportmodsettings'),
 ));
@@ -64,10 +64,7 @@ define("SETTINGSTYPEASSIGN", array(
 define("SETTINGSCATEGORYOFFSET", 90000);
 
 function local_exportmodsettings_generate_output_csv($output, $postdata = array()){
-    global $DB, $CFG;
-
-    //require_once $CFG->dirroot.'/grade/lib.php';
-    //$gtree = new grade_tree(5810, false, false);
+    global $DB;
 
     $num = 0;
     $data = array();
@@ -120,27 +117,30 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             
             IF(gi.itemtype='category', gi.iteminstance+".SETTINGSCATEGORYOFFSET.", gi.iteminstance ) AS moodle_id,            
             
-            IF(gi.itemtype='category', gc.fullname, gi.itemname ) AS assign_name,
-            gi.aggregationcoef AS weight,
+            IF(gi.itemtype='category', gc.fullname, a.name ) AS assign_name,
+            gi.aggregationcoef2*100 AS weight,
             IF(gi.hidden = 0, 1, '' ) AS obligatory,
             gi.gradepass AS pass_grade,
-            
-            gi.itemtype AS itemtype,
             IF(gi.itemtype='category', 
                 (
                     SELECT COUNT(*)
                     FROM {grade_items} AS sgi
                     WHERE sgi.categoryid=gc.id AND sgi.hidden=0
                 )
-            , '' ) AS count_children_in_category,
- 
-            IF(gi.itemtype!='category' && gi.categoryid IS NOT NULL , 1, 0 ) AS if_child_of_category,           
-                        
-            IF(gi.itemmodule!='".$mod."' OR gi.itemtype='manual', gi.categoryid, '' ) AS parent_assign,
+            , '' ) AS assign_req,
+            IF(gi.itemtype='category', 
+                (
+                    SELECT COUNT(*)
+                    FROM {grade_items} AS sgi
+                    WHERE sgi.categoryid=gc.id AND sgi.hidden=0
+                )
+            , '' ) AS assign_for_avg,
+            IF(gi.itemmodule='".$mod."', gi.categoryid, '' ) AS parent_assign,
+            
+            REPLACE(IF(gi.itemtype!='category', gcd.path, '' ),'/','') AS assign_type, 
             
             gi.timecreated AS timecreated,            
-            
-            IF(a.timemodified IS NOT NULL, GREATEST(a.timemodified, gi.timemodified), gi.timemodified ) AS last_updated
+            GREATEST(a.timemodified, gi.timemodified) AS last_updated
             
         FROM {grade_items} AS gi
         LEFT JOIN {course} AS c ON (c.id = gi.courseid)        
@@ -156,11 +156,11 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
 
             if ($periodago != 0) {
                 $attributes = array(time() - $periodago);
-                $select = " WHERE (gi.itemmodule='".$mod."' OR (gi.itemmodule IS NULL AND gi.itemtype!='course') OR gi.itemtype='category') 
-                    AND IF(a.timemodified IS NOT NULL, GREATEST(a.timemodified, gi.timemodified), gi.timemodified ) > ?  ";
+                $select = " WHERE (gi.itemmodule='".$mod."' OR gi.itemtype='category') 
+                    AND GREATEST(a.timemodified, gi.timemodified) > ?  ";
             } else {
                 $attributes = array();
-                $select = " WHERE (gi.itemmodule='".$mod."' OR (gi.itemmodule IS NULL AND gi.itemtype!='course') OR gi.itemtype='category') ";
+                $select = " WHERE (gi.itemmodule='".$mod."' OR gi.itemtype='category') ";
             }
         }
 
@@ -169,8 +169,8 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             $attributes = array($postdata->startdate, $postdata->enddate);
 
             $select = " 
-                WHERE (gi.itemmodule='".$mod."' OR (gi.itemmodule IS NULL AND gi.itemtype!='course') OR gi.itemtype='category') 
-                AND IF(a.timemodified IS NOT NULL, GREATEST(a.timemodified, gi.timemodified), gi.timemodified ) BETWEEN ? AND ? 
+                WHERE (gi.itemmodule='".$mod."' OR gi.itemtype='category') 
+                AND GREATEST(a.timemodified, gi.timemodified) BETWEEN ? AND ?                       
             ";
 
             if($postdata->year != 0){
@@ -220,20 +220,12 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             $data[$num]['OBLIGATORY'] = $item->obligatory;
             $data[$num]['PASS_GRADE'] = $item->pass_grade;
 
-            $data[$num]['ASSIGN_REQ'] = $item->count_children_in_category;
-            $data[$num]['ASSIGN_FOR_AVG'] = $item->count_children_in_category;
+            $data[$num]['ASSIGN_REQ'] = $item->assign_req;
+            $data[$num]['ASSIGN_FOR_AVG'] = $item->assign_for_avg;
             $data[$num]['PARENT_ASSIGN'] = $item->parent_assign;
             $data[$num]['SUPPORTIVE_GRADE'] = '';//???
 
-            $assign_type = '';
-            if($item->itemtype == 'category'){
-                if($item->count_children_in_category) $assign_type = 10;
-            }else{
-                if($item->if_child_of_category) $assign_type = 11;
-                if(!$item->if_child_of_category) $assign_type = 12;
-            }
-
-            $data[$num]['ASSIGN_TYPE'] = $assign_type;
+            $data[$num]['ASSIGN_TYPE'] = (!empty($item->assign_type))?SETTINGSTYPEASSIGN[$item->assign_type]:'';
 
             if($item->last_updated == null || empty($item->last_updated)){
                 $data[$num]['LAST_UPDATED'] = date('Ymd', $item->timecreated);
