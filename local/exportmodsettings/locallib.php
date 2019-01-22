@@ -139,6 +139,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             
             REPLACE(IF(gi.itemtype!='category', gcd.path, '' ),'/','') AS assign_type, 
             
+            gi.timecreated AS timecreated,            
             GREATEST(a.timemodified, gi.timemodified) AS last_updated
             
         FROM {grade_items} AS gi
@@ -191,7 +192,6 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
         foreach ($result as $item) {
 
             if(in_array($item->id, $usedids)) continue;
-            if($item->last_updated == null) continue;
 
             //Prepare YEAR and SEMESTER
             $arrname = explode('-', $item->course_name);
@@ -226,7 +226,12 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             $data[$num]['SUPPORTIVE_GRADE'] = '';//???
 
             $data[$num]['ASSIGN_TYPE'] = (!empty($item->assign_type))?SETTINGSTYPEASSIGN[$item->assign_type]:'';
-            $data[$num]['LAST_UPDATED'] = date('Ymd', $item->last_updated);
+
+            if($item->last_updated == null || empty($item->last_updated)){
+                $data[$num]['LAST_UPDATED'] = date('Ymd', $item->timecreated);
+            }else{
+                $data[$num]['LAST_UPDATED'] = date('Ymd', $item->last_updated);
+            }
 
             $num++;
             $usedids[] = $item->id;

@@ -95,6 +95,7 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
             gi.iteminstance AS moodle_id,
             gg.userid AS student12,
             gg.finalgrade AS grade,
+            gg.timecreated AS timecreated,                
             gg.timemodified AS last_updated                
         
         FROM mdl_grade_grades AS gg
@@ -140,8 +141,6 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
 
     foreach ($result as $item) {
 
-        if($item->last_updated == null) continue;
-
         //Prepare YEAR and SEMESTER
         $arrname = explode('-', $item->course_name);
         $yearvalue = (isset($arrname[3])) ? $arrname[3] - 1 : '';
@@ -168,8 +167,12 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         $data[$num]['Grade'] = $item->grade;
         $data[$num]['Passed'] = '';
 
-        $data[$num]['LAST_UPDATED'] = date('Ymd', $item->last_updated);
-
+        if($item->last_updated == null || empty($item->last_updated)){
+            $data[$num]['LAST_UPDATED'] = date('Ymd', $item->timecreated);
+        }else{
+            $data[$num]['LAST_UPDATED'] = date('Ymd', $item->last_updated);
+        }
+        
         $num++;
         $usedids[] = $item->id;
     }
