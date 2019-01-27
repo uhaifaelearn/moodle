@@ -144,7 +144,17 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         //Prepare YEAR and SEMESTER
         $arrname = explode('-', $item->course_name);
         $yearvalue = (isset($arrname[3])) ? $arrname[3] - 1 : '';
-        $semestrvalue = (isset($arrname[2])) ? GRADESTYPESEMESTER[preg_replace("/[^a-zA-Z]+/", "", $arrname[2])] : '';
+
+        $semestrvalue = '';
+        if(!empty($arrname[2])){
+            $val = preg_replace("/[^a-zA-Z]+/", "", $arrname[2]);
+
+            $arraykeys = array_keys(SETTINGSTYPESEMESTER);
+
+            if(in_array($val, $arraykeys)){
+                $semestrvalue = SETTINGSTYPESEMESTER[$val];
+            }
+        }
 
         //Prepare SM_OBJID and E_OBJID
         $arridnumber = explode('-', $item->course_idnumber);
