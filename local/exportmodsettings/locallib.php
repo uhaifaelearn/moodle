@@ -230,7 +230,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
                     FROM {grade_items}
                     WHERE iteminstance=? AND itemtype='course'
                 ";
-                $res = $DB->get_records_sql($sql, array(intval($item->parent_assign)));
+                $res = $DB->get_records_sql($sql, array($item->parent_assign));
 
                 if (count($res) > 0) {
                     $item->parent_assign = '';
