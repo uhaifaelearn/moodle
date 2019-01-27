@@ -230,7 +230,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
                     FROM {grade_items}
                     WHERE iteminstance=? AND itemtype='course'
                 ";
-                $res = $DB->get_records_sql($sql, array(intval($item->parent_assign)));
+                $res = $DB->get_records_sql($sql, array($item->parent_assign));
 
                 if (count($res) > 0) {
                     $item->parent_assign = '';
@@ -251,7 +251,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
 
             $data[$num]['ASSIGN_REQ'] = $item->count_children_in_category;
             $data[$num]['ASSIGN_FOR_AVG'] = $item->count_children_in_category;
-            $data[$num]['PARENT_ASSIGN'] = $item->parent_assign;
+            $data[$num]['PARENT_ASSIGN'] = (!empty($item->parent_assign))?$item->parent_assign + 90000:'';
             $data[$num]['SUPPORTIVE_GRADE'] = '';//???
 
             $assign_type = '';
