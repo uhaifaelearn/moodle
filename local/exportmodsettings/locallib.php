@@ -118,7 +118,11 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             c.shortname AS course_name,
             c.idnumber AS course_idnumber,
             
-            IF(gi.itemtype='category', gi.iteminstance+".SETTINGSCATEGORYOFFSET.", gi.iteminstance ) AS moodle_id,            
+            (CASE 
+                WHEN gi.itemtype='category' THEN gi.iteminstance+90000
+                WHEN gi.itemtype='manual' THEN gi.id+180000
+                ELSE gi.iteminstance
+            END) AS moodle_id,                       
             
             IF(gi.itemtype='category', gc.fullname, gi.itemname ) AS assign_name,
             gi.aggregationcoef AS weight,
@@ -196,7 +200,17 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             //Prepare YEAR and SEMESTER
             $arrname = explode('-', $item->course_name);
             $yearvalue = (isset($arrname[3])) ? $arrname[3] - 1 : '';
-            $semestrvalue = (isset($arrname[2])) ? SETTINGSTYPESEMESTER[preg_replace("/[^a-zA-Z]+/", "", $arrname[2])] : '';
+
+            $semestrvalue = '';
+            if(!empty($arrname[2])){
+                $val = preg_replace("/[^a-zA-Z]+/", "", $arrname[2]);
+
+                $arraykeys = array_keys(SETTINGSTYPESEMESTER);
+
+                if(in_array($val, $arraykeys)){
+                    $semestrvalue = SETTINGSTYPESEMESTER[$val];
+                }
+            }
 
             //Prepare SM_OBJID and E_OBJID
             $arridnumber = explode('-', $item->course_idnumber);
@@ -208,6 +222,21 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             if(empty($semestrvalue)) continue;
             if(empty($smobjid) || !is_numeric($smobjid)) continue;
             if(empty($eobjid) || !is_numeric($eobjid)) continue;
+
+            //Recalculate for categoryid (course) : if_child_of_category, parent_assign
+            if(!empty($item->parent_assign)) {
+                $sql = "
+                    SELECT *
+                    FROM {grade_items}
+                    WHERE iteminstance=? AND itemtype='course'
+                ";
+                $res = $DB->get_records_sql($sql, array(intval($item->parent_assign)));
+
+                if (count($res) > 0) {
+                    $item->parent_assign = '';
+                    $item->if_child_of_category = 0;
+                }
+            }
 
             $data[$num]['YEAR'] = $yearvalue;
             $data[$num]['SEMESTER'] = $semestrvalue;
