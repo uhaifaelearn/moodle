@@ -244,7 +244,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             $data[$num]['E_OBJID'] = $eobjid;
 
             $data[$num]['MOODLE_ID'] = $item->moodle_id;
-            $data[$num]['ASSIGN_NAME'] = $item->assign_name;
+            $data[$num]['ASSIGN_NAME'] = str_replace(',', ' ', $item->assign_name);
             $data[$num]['WEIGHT'] = round($item->weight, 5);
             $data[$num]['OBLIGATORY'] = $item->obligatory;
             $data[$num]['PASS_GRADE'] = round($item->pass_grade, 5);
@@ -252,7 +252,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             $data[$num]['ASSIGN_REQ'] = $item->count_children_in_category;
             $data[$num]['ASSIGN_FOR_AVG'] = $item->count_children_in_category;
             $data[$num]['PARENT_ASSIGN'] = (!empty($item->parent_assign))?$item->parent_assign + 90000:'';
-            $data[$num]['SUPPORTIVE_GRADE'] = '';//???
+            $data[$num]['SUPPORTIVE_GRADE'] = '';
 
             $assign_type = '';
             if($item->itemtype == 'category'){
