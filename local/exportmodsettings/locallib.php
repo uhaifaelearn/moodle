@@ -212,18 +212,18 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
                 }
             }
 
-            //Prepare SM_OBJID and E_OBJID
+            // Prepare SM_OBJID and E_OBJID
             $arridnumber = explode('-', $item->course_idnumber);
             $smobjid = (isset($arridnumber[1])) ? $arridnumber[1] : '';
             $eobjid = (isset($arridnumber[0])) ? $arridnumber[0] : '';
 
-            //Validation
+            // Validation
             if(empty($yearvalue) || strlen($yearvalue) != 4 || !is_numeric($yearvalue)) continue;
             if(empty($semestrvalue)) continue;
             if(empty($smobjid) || !is_numeric($smobjid)) continue;
             if(empty($eobjid) || !is_numeric($eobjid)) continue;
 
-            //Recalculate for categoryid (course) : if_child_of_category, parent_assign
+            // Recalculate for categoryid (course) : if_child_of_category, parent_assign
             if(!empty($item->parent_assign)) {
                 $sql = "
                     SELECT *
@@ -238,6 +238,26 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
                 }
             }
 
+            // Assign type
+            $assigntype = '';
+            if($item->itemtype == 'category'){
+                if($item->count_children_in_category) $assigntype = 10;
+            }else{
+                if($item->if_child_of_category) $assigntype = 11;
+                if(!$item->if_child_of_category) $assigntype = 12;
+            }
+
+            // Obligatory
+            $obligatory = '';
+            if($item->obligatory == 1) $obligatory = 'X';
+
+            // parent assign
+            $parentassign = (!empty($item->parent_assign))?$item->parent_assign + 90000:'';
+
+            //Validation
+            if(empty($assigntype)) continue;
+            if($assigntype == 11 && empty($parentassign)) continue;
+
             $data[$num]['YEAR'] = $yearvalue;
             $data[$num]['SEMESTER'] = $semestrvalue;
             $data[$num]['SM_OBJID'] = $smobjid;
@@ -246,23 +266,14 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             $data[$num]['MOODLE_ID'] = $item->moodle_id;
             $data[$num]['ASSIGN_NAME'] = str_replace(',', ' ', $item->assign_name);
             $data[$num]['WEIGHT'] = round($item->weight, 5);
-            $data[$num]['OBLIGATORY'] = $item->obligatory;
+            $data[$num]['OBLIGATORY'] = $obligatory;
             $data[$num]['PASS_GRADE'] = round($item->pass_grade, 5);
 
             $data[$num]['ASSIGN_REQ'] = $item->count_children_in_category;
             $data[$num]['ASSIGN_FOR_AVG'] = $item->count_children_in_category;
-            $data[$num]['PARENT_ASSIGN'] = (!empty($item->parent_assign))?$item->parent_assign + 90000:'';
+            $data[$num]['PARENT_ASSIGN'] = $parentassign;
             $data[$num]['SUPPORTIVE_GRADE'] = '';
-
-            $assign_type = '';
-            if($item->itemtype == 'category'){
-                if($item->count_children_in_category) $assign_type = 10;
-            }else{
-                if($item->if_child_of_category) $assign_type = 11;
-                if(!$item->if_child_of_category) $assign_type = 12;
-            }
-
-            $data[$num]['ASSIGN_TYPE'] = $assign_type;
+            $data[$num]['ASSIGN_TYPE'] = $assigntype;
 
             if($item->last_updated == null || empty($item->last_updated)){
                 $data[$num]['LAST_UPDATED'] = date('Ymd', $item->timecreated);
