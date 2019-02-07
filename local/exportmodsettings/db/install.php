@@ -34,12 +34,12 @@ function xmldb_local_exportmodsettings_install() {
 
     $array = SETTINGSCRONPERIODS;
     reset($array);
-    $first_key = key($array);
+    $firstkey = key($array);
 
     $obj = new \stdClass();
     $obj->plugin = 'local_exportmodsettings';
     $obj->name = 'crontime';
-    $obj->value = $first_key + 1;
+    $obj->value = $firstkey + 1;
     $DB->insert_record('config_plugins', $obj);
 
     return true;

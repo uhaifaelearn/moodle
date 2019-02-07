@@ -34,12 +34,12 @@ function xmldb_local_exportmodgrades_install() {
 
     $array = GRADESCRONPERIODS;
     reset($array);
-    $first_key = key($array);
+    $firstkey = key($array);
 
     $obj = new \stdClass();
     $obj->plugin = 'local_exportmodgrades';
     $obj->name = 'crontime';
-    $obj->value = $first_key + 1;
+    $obj->value = $firstkey + 1;
     $DB->insert_record('config_plugins', $obj);
 
     return true;
