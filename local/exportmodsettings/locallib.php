@@ -238,6 +238,10 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
                 }
             }
 
+            if(empty($item->parent_assign)) {
+                $item->if_child_of_category = 0;
+            }
+
             // Assign type
             $assigntype = '';
             if($item->itemtype == 'category'){
@@ -256,7 +260,6 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
 
             //Validation
             if(empty($assigntype)) continue;
-            if($assigntype == 11 && empty($parentassign)) continue;
 
             $data[$num]['YEAR'] = $yearvalue;
             $data[$num]['SEMESTER'] = $semestrvalue;
@@ -291,16 +294,16 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
     // End test time execute
 
     //headers
-//    fputcsv($output, $headers);
-//    foreach($data as $row) {
-//        fputcsv($output, $row);
-//    }
+    fputcsv($output, $headers);
+    foreach($data as $row) {
+        fputcsv($output, $row);
+    }
 
     //headers
-    fputcsv($output, $headers);
-    foreach($data as $row){
-        fputs($output, implode(",", array_map("encodeFunc", $row))."\r\n");
-    }
+//    fputcsv($output, $headers);
+//    foreach($data as $row){
+//        fputs($output, implode(",", array_map("encodeFunc", $row))."\r\n");
+//    }
 
     return $output;
 }
