@@ -193,21 +193,21 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
     //End test time execute
 
     //headers
-    fputcsv($output, $headers);
-    foreach($data as $row) {
-        fputcsv($output, $row);
-    }
+//    fputcsv($output, $headers);
+//    foreach($data as $row) {
+//        fputcsv($output, $row);
+//    }
 
     //headers
-//    fputcsv($output, $headers);
-//    foreach($data as $row){
-//        fputs($output, implode(",", array_map("encodeFunc", $row))."\r\n");
-//    }
+    fputcsv($output, $headers);
+    foreach($data as $row){
+        fputs($output, implode(",", array_map("local_exportmodgrades_encodeFunc", $row))."\r\n");
+    }
 
     return $output;
 }
 
-function encodeFunc($value) {
+function local_exportmodgrades_encodeFunc($value) {
     // remove any ESCAPED double quotes within string.
     $value = str_replace('\\"','"',$value);
     // then force escape these same double quotes And Any UNESCAPED Ones.
