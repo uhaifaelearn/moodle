@@ -175,7 +175,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
 
             $select = " 
                 WHERE (gi.itemmodule='".$mod."' OR (gi.itemmodule IS NULL AND gi.itemtype!='course') OR gi.itemtype='category') 
-                AND IF(a.timemodified IS NOT NULL, GREATEST(a.timemodified, gi.timemodified), gi.timemodified ) BETWEEN ? AND ? 
+                AND IF(a.timemodified IS NOT NULL, GREATEST(a.timemodified, gi.timemodified), gi.timemodified ) BETWEEN ? AND ?
             ";
 
             if($postdata->year != 0){
@@ -239,6 +239,9 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
         $eobjid = $course['eobjid'];
 
         foreach($items['data'] as $item) {
+
+            if(empty($item->assign_type)) continue;
+
             $data[$num]['YEAR'] = $yearvalue;
             $data[$num]['SEMESTER'] = $semestrvalue;
             $data[$num]['SM_OBJID'] = $smobjid;
@@ -250,8 +253,8 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             $data[$num]['OBLIGATORY'] = $item->obligatory;
             $data[$num]['PASS_GRADE'] = round($item->pass_grade, 5);
 
-            $data[$num]['ASSIGN_REQ'] = $item->count_children;
-            $data[$num]['ASSIGN_FOR_AVG'] = $item->count_children;
+            $data[$num]['ASSIGN_REQ'] = ($item->count_children)?$item->count_children:'';
+            $data[$num]['ASSIGN_FOR_AVG'] = ($item->count_children)?$item->count_children:'';
             $data[$num]['PARENT_ASSIGN'] = $item->categoryid;
             $data[$num]['SUPPORTIVE_GRADE'] = '';
             $data[$num]['ASSIGN_TYPE'] = $item->assign_type;
@@ -304,12 +307,6 @@ function exportmodsettings_recursive($children, $result) {
     $obj->table = $object->table;
     $obj->itemtype = $object->itemtype;
     $obj->itemmodule = $object->itemmodule;
-    $obj->pass_grade = $object->gradepass;
-    $obj->weight = $object->aggregationcoef;
-    $obj->obligatory = ($object->hidden == 0)?'X':'';
-    $obj->timecreated = $object->timecreated;
-    $obj->timemodified = $object->timemodified;
-
 
     switch ($children['type']) {
         case 'courseitem':
@@ -317,8 +314,19 @@ function exportmodsettings_recursive($children, $result) {
             return $result;
             break;
 
+        case 'categoryitem':
+            return $result;
+            break;
+
         case 'category':
+            $first_item = reset($children['children']);
+
             $obj->moodle_id = $object->id + 90000;
+            $obj->weight = $first_item['object']->aggregationcoef;
+            $obj->pass_grade = $first_item['object']->gradepass;
+            $obj->obligatory = ($first_item['object']->hidden == 0)?'X':'';
+            $obj->timecreated = $first_item['object']->timecreated;
+            $obj->timemodified = $first_item['object']->timemodified;
 
             if(isset($children['children']) && count($children['children']) != 0) {
                 $obj->count_children = count($children['children']) - 1;
@@ -339,9 +347,20 @@ function exportmodsettings_recursive($children, $result) {
             break;
 
         default:
+
+            //Not quiz
+            if($object->itemtype == 'mod' && $object->itemmodule == 'quiz'){
+                return $result;
+            }
+
             $obj->moodle_id = $object->id;
+            $obj->weight = $object->aggregationcoef;
+            $obj->pass_grade = $object->gradepass;
             $obj->count_children = 0;
             $obj->assign_name = $object->itemname;
+            $obj->obligatory = ($object->hidden == 0)?'X':'';
+            $obj->timecreated = $object->timecreated;
+            $obj->timemodified = $object->timemodified;
 
             //categoryid
             if($object->categoryid != $result['course_category']){
@@ -351,16 +370,15 @@ function exportmodsettings_recursive($children, $result) {
             }
 
             //manual
-            if($obj->itemtype == 'manual') $obj->id += 180000;
+            if($obj->itemtype == 'manual') $obj->moodle_id += 180000;
 
             //assigntype
             if($obj->categoryid) $obj->assign_type = 11;
             if(!$obj->categoryid) $obj->assign_type = 12;
     }
 
-    if($children['type'] != 'categoryitem' && $children['type'] != 'courseitem') {
-        $result['data'][] = $obj;
-    }
+    $result['data'][] = $obj;
+
     return $result;
 }
 
@@ -382,7 +400,8 @@ function exportmodsettings_build_grade_course($courseid) {
     return $result;
 }
 
-//exportmodsettings_build_grade_course(5810);
+//$h = exportmodsettings_build_grade_course(3902);
+//echo '<pre>';print_r($h);exit;
 
 
 function local_exportmodsettings_save_file_to_disk($postdata = array()){
