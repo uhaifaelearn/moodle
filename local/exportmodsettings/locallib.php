@@ -267,7 +267,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             $data[$num]['E_OBJID'] = $eobjid;
 
             $data[$num]['MOODLE_ID'] = $item->moodle_id;
-            $data[$num]['ASSIGN_NAME'] = trim(str_replace(',', ' ', $item->assign_name));
+            $data[$num]['ASSIGN_NAME'] = htmlspecialchars_decode(trim(str_replace(',', ' ', $item->assign_name)));
             $data[$num]['WEIGHT'] = round($item->weight, 5);
             $data[$num]['OBLIGATORY'] = $obligatory;
             $data[$num]['PASS_GRADE'] = round($item->pass_grade, 5);
@@ -294,21 +294,21 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
     // End test time execute
 
     //headers
-    fputcsv($output, $headers);
-    foreach($data as $row) {
-        fputcsv($output, $row);
-    }
+//    fputcsv($output, $headers);
+//    foreach($data as $row) {
+//        fputcsv($output, $row);
+//    }
 
     //headers
-//    fputcsv($output, $headers);
-//    foreach($data as $row){
-//        fputs($output, implode(",", array_map("encodeFunc", $row))."\r\n");
-//    }
+    fputcsv($output, $headers);
+    foreach($data as $row){
+        fputs($output, implode(",", array_map("local_exportmodsettings_encodeFunc", $row))."\r\n");
+    }
 
     return $output;
 }
 
-function encodeFunc($value) {
+function local_exportmodsettings_encodeFunc($value) {
     // remove any ESCAPED double quotes within string.
     $value = str_replace('\\"','"',$value);
     // then force escape these same double quotes And Any UNESCAPED Ones.
