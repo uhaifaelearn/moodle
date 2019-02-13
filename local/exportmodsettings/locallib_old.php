@@ -56,7 +56,7 @@ define("SETTINGSTYPESEMESTERVIEW", array(
 ));
 
 define("SETTINGSTYPEASSIGN", array(
-    '1' => get_string('type_assign_1', 'local_exportmodsettings'),
+    '10' => get_string('type_assign_1', 'local_exportmodsettings'),
     '11' => get_string('type_assign_2', 'local_exportmodsettings'),
     '12' => get_string('type_assign_3', 'local_exportmodsettings'),
 ));
@@ -64,7 +64,10 @@ define("SETTINGSTYPEASSIGN", array(
 define("SETTINGSCATEGORYOFFSET", 90000);
 
 function local_exportmodsettings_generate_output_csv($output, $postdata = array()){
-    global $DB;
+    global $DB, $CFG;
+
+    //require_once $CFG->dirroot.'/grade/lib.php';
+    //$gtree = new grade_tree(5810, false, false);
 
     $num = 0;
     $data = array();
@@ -115,32 +118,33 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             c.shortname AS course_name,
             c.idnumber AS course_idnumber,
             
-            IF(gi.itemtype='category', gi.iteminstance+".SETTINGSCATEGORYOFFSET.", gi.iteminstance ) AS moodle_id,            
+            (CASE 
+                WHEN gi.itemtype='category' THEN gi.iteminstance+90000
+                WHEN gi.itemtype='manual' THEN gi.id+180000
+                ELSE gi.iteminstance
+            END) AS moodle_id,                       
             
-            IF(gi.itemtype='category', gc.fullname, a.name ) AS assign_name,
-            gi.aggregationcoef2*100 AS weight,
+            IF(gi.itemtype='category', gc.fullname, gi.itemname ) AS assign_name,
+            gi.aggregationcoef AS weight,
             IF(gi.hidden = 0, 1, '' ) AS obligatory,
             gi.gradepass AS pass_grade,
-            IF(gi.itemtype='category', 
-                (
-                    SELECT COUNT(*)
-                    FROM {grade_items} AS sgi
-                    WHERE sgi.categoryid=gc.id AND sgi.hidden=0
-                )
-            , '' ) AS assign_req,
-            IF(gi.itemtype='category', 
-                (
-                    SELECT COUNT(*)
-                    FROM {grade_items} AS sgi
-                    WHERE sgi.categoryid=gc.id AND sgi.hidden=0
-                )
-            , '' ) AS assign_for_avg,
-            IF(gi.itemmodule='".$mod."', gi.categoryid, '' ) AS parent_assign,
             
-            REPLACE(IF(gi.itemtype!='category', gcd.path, '' ),'/','') AS assign_type, 
+            gi.itemtype AS itemtype,
+            IF(gi.itemtype='category', 
+                (
+                    SELECT COUNT(*)
+                    FROM {grade_items} AS sgi
+                    WHERE sgi.categoryid=gc.id AND sgi.hidden=0
+                )
+            , '' ) AS count_children_in_category,
+ 
+            IF(gi.itemtype!='category' && gi.categoryid IS NOT NULL , 1, 0 ) AS if_child_of_category,           
+                        
+            IF(gi.itemmodule!='".$mod."' OR gi.itemtype='manual', gi.categoryid, '' ) AS parent_assign,
             
             gi.timecreated AS timecreated,            
-            GREATEST(a.timemodified, gi.timemodified) AS last_updated
+            
+            IF(a.timemodified IS NOT NULL, GREATEST(a.timemodified, gi.timemodified), gi.timemodified ) AS last_updated
             
         FROM {grade_items} AS gi
         LEFT JOIN {course} AS c ON (c.id = gi.courseid)        
@@ -156,11 +160,11 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
 
             if ($periodago != 0) {
                 $attributes = array(time() - $periodago);
-                $select = " WHERE (gi.itemmodule='".$mod."' OR gi.itemtype='category') 
-                    AND GREATEST(a.timemodified, gi.timemodified) > ?  ";
+                $select = " WHERE (gi.itemmodule='".$mod."' OR (gi.itemmodule IS NULL AND gi.itemtype!='course') OR gi.itemtype='category') 
+                    AND IF(a.timemodified IS NOT NULL, GREATEST(a.timemodified, gi.timemodified), gi.timemodified ) > ?  ";
             } else {
                 $attributes = array();
-                $select = " WHERE (gi.itemmodule='".$mod."' OR gi.itemtype='category') ";
+                $select = " WHERE (gi.itemmodule='".$mod."' OR (gi.itemmodule IS NULL AND gi.itemtype!='course') OR gi.itemtype='category') ";
             }
         }
 
@@ -169,8 +173,8 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             $attributes = array($postdata->startdate, $postdata->enddate);
 
             $select = " 
-                WHERE (gi.itemmodule='".$mod."' OR gi.itemtype='category') 
-                AND GREATEST(a.timemodified, gi.timemodified) BETWEEN ? AND ?                       
+                WHERE (gi.itemmodule='".$mod."' OR (gi.itemmodule IS NULL AND gi.itemtype!='course') OR gi.itemtype='category') 
+                AND IF(a.timemodified IS NOT NULL, GREATEST(a.timemodified, gi.timemodified), gi.timemodified ) BETWEEN ? AND ? 
             ";
 
             if($postdata->year != 0){
@@ -196,18 +200,66 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             //Prepare YEAR and SEMESTER
             $arrname = explode('-', $item->course_name);
             $yearvalue = (isset($arrname[3])) ? $arrname[3] - 1 : '';
-            $semestrvalue = (isset($arrname[2])) ? SETTINGSTYPESEMESTER[preg_replace("/[^a-zA-Z]+/", "", $arrname[2])] : '';
 
-            //Prepare SM_OBJID and E_OBJID
+            $semestrvalue = '';
+            if(!empty($arrname[2])){
+                $val = preg_replace("/[^a-zA-Z]+/", "", $arrname[2]);
+
+                $arraykeys = array_keys(SETTINGSTYPESEMESTER);
+
+                if(in_array($val, $arraykeys)){
+                    $semestrvalue = SETTINGSTYPESEMESTER[$val];
+                }
+            }
+
+            // Prepare SM_OBJID and E_OBJID
             $arridnumber = explode('-', $item->course_idnumber);
             $smobjid = (isset($arridnumber[1])) ? $arridnumber[1] : '';
             $eobjid = (isset($arridnumber[0])) ? $arridnumber[0] : '';
 
-            //Validation
+            // Validation
             if(empty($yearvalue) || strlen($yearvalue) != 4 || !is_numeric($yearvalue)) continue;
             if(empty($semestrvalue)) continue;
             if(empty($smobjid) || !is_numeric($smobjid)) continue;
             if(empty($eobjid) || !is_numeric($eobjid)) continue;
+
+            // Recalculate for categoryid (course) : if_child_of_category, parent_assign
+            if(!empty($item->parent_assign)) {
+                $sql = "
+                    SELECT *
+                    FROM {grade_items}
+                    WHERE iteminstance=? AND itemtype='course'
+                ";
+                $res = $DB->get_records_sql($sql, array($item->parent_assign));
+
+                if (count($res) > 0) {
+                    $item->parent_assign = '';
+                    $item->if_child_of_category = 0;
+                }
+            }
+
+            if(empty($item->parent_assign)) {
+                $item->if_child_of_category = 0;
+            }
+
+            // Assign type
+            $assigntype = '';
+            if($item->itemtype == 'category'){
+                if($item->count_children_in_category) $assigntype = 10;
+            }else{
+                if($item->if_child_of_category) $assigntype = 11;
+                if(!$item->if_child_of_category) $assigntype = 12;
+            }
+
+            // Obligatory
+            $obligatory = '';
+            if($item->obligatory == 1) $obligatory = 'X';
+
+            // parent assign
+            $parentassign = (!empty($item->parent_assign))?$item->parent_assign + 90000:'';
+
+            //Validation
+            if(empty($assigntype)) continue;
 
             $data[$num]['YEAR'] = $yearvalue;
             $data[$num]['SEMESTER'] = $semestrvalue;
@@ -215,17 +267,16 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             $data[$num]['E_OBJID'] = $eobjid;
 
             $data[$num]['MOODLE_ID'] = $item->moodle_id;
-            $data[$num]['ASSIGN_NAME'] = $item->assign_name;
-            $data[$num]['WEIGHT'] = $item->weight;
-            $data[$num]['OBLIGATORY'] = $item->obligatory;
-            $data[$num]['PASS_GRADE'] = $item->pass_grade;
+            $data[$num]['ASSIGN_NAME'] = htmlspecialchars_decode(trim(str_replace(',', ' ', $item->assign_name)));
+            $data[$num]['WEIGHT'] = round($item->weight, 5);
+            $data[$num]['OBLIGATORY'] = $obligatory;
+            $data[$num]['PASS_GRADE'] = round($item->pass_grade, 5);
 
-            $data[$num]['ASSIGN_REQ'] = $item->assign_req;
-            $data[$num]['ASSIGN_FOR_AVG'] = $item->assign_for_avg;
-            $data[$num]['PARENT_ASSIGN'] = $item->parent_assign;
-            $data[$num]['SUPPORTIVE_GRADE'] = '';//???
-
-            $data[$num]['ASSIGN_TYPE'] = (!empty($item->assign_type))?SETTINGSTYPEASSIGN[$item->assign_type]:'';
+            $data[$num]['ASSIGN_REQ'] = $item->count_children_in_category;
+            $data[$num]['ASSIGN_FOR_AVG'] = $item->count_children_in_category;
+            $data[$num]['PARENT_ASSIGN'] = $parentassign;
+            $data[$num]['SUPPORTIVE_GRADE'] = '';
+            $data[$num]['ASSIGN_TYPE'] = $assigntype;
 
             if($item->last_updated == null || empty($item->last_updated)){
                 $data[$num]['LAST_UPDATED'] = date('Ymd', $item->timecreated);
@@ -240,15 +291,30 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
 
     $time_elapsed_secs = microtime(true) - $start;
     local_exportmodsettings_log_file_success('Process took  '.$time_elapsed_secs.' sec');
-    //End test time execute
+    // End test time execute
+
+    //headers
+//    fputcsv($output, $headers);
+//    foreach($data as $row) {
+//        fputcsv($output, $row);
+//    }
 
     //headers
     fputcsv($output, $headers);
-    foreach($data as $row) {
-        fputcsv($output, $row);
+    foreach($data as $row){
+        fputs($output, implode(",", array_map("local_exportmodsettings_encodeFunc", $row))."\r\n");
     }
 
     return $output;
+}
+
+function local_exportmodsettings_encodeFunc($value) {
+    // remove any ESCAPED double quotes within string.
+    $value = str_replace('\\"','"',$value);
+    // then force escape these same double quotes And Any UNESCAPED Ones.
+    $value = str_replace('"','\"',$value);
+    // force wrap value in quotes and return
+    return $value;
 }
 
 function local_exportmodsettings_save_file_to_disk($postdata = array()){
