@@ -175,7 +175,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
 
             $select = " 
                 WHERE (gi.itemmodule='".$mod."' OR (gi.itemmodule IS NULL AND gi.itemtype!='course') OR gi.itemtype='category') 
-                AND IF(a.timemodified IS NOT NULL, GREATEST(a.timemodified, gi.timemodified), gi.timemodified ) BETWEEN ? AND ?                
+                AND IF(a.timemodified IS NOT NULL, GREATEST(a.timemodified, gi.timemodified), gi.timemodified ) BETWEEN ? AND ? 
             ";
 
             if($postdata->year != 0){
@@ -368,7 +368,7 @@ function exportmodsettings_recursive($children, $result) {
                 return $result;
             }
 
-            $obj->moodle_id = $object->id;
+            $obj->moodle_id = $object->iteminstance;
             $obj->weight = $object->aggregationcoef;
             $obj->pass_grade = $object->gradepass;
             $obj->count_children = 0;
@@ -401,7 +401,7 @@ function exportmodsettings_recursive($children, $result) {
             }
 
             //manual
-            if($obj->itemtype == 'manual') $obj->moodle_id += 180000;
+            if($obj->itemtype == 'manual') $obj->moodle_id = $object->id + 180000;
 
             //assigntype
             if($obj->categoryid) $obj->assign_type = 11;
