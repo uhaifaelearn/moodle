@@ -68,7 +68,6 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
 
     $num = 0;
     $data = array();
-    $usedids = array();
 
     $headers = array(
         'YEAR',
@@ -80,6 +79,7 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         'Student12',
         'Grade',
         'Passed',
+        'Lecturer_ID',
 
         'LAST_UPDATED',
     );
@@ -90,17 +90,19 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
     $query ="
         SELECT 
             gi.id,
+            c.id AS course_id,
             c.shortname AS course_name,
             c.idnumber AS course_idnumber,
-            gi.iteminstance AS moodle_id,
-            gg.userid AS student12,
+            gi.iteminstance AS iteminstance,
+            u.idnumber AS student12,
             gg.finalgrade AS grade,
             gg.timecreated AS timecreated,                
             gg.timemodified AS last_updated                
         
-        FROM mdl_grade_grades AS gg
-	    LEFT JOIN mdl_grade_items AS gi ON (gg.itemid = gi.id)
-	    LEFT JOIN mdl_course AS c ON (c.id = gi.courseid)
+        FROM {grade_grades} AS gg
+	    LEFT JOIN {grade_items} AS gi ON (gg.itemid = gi.id)
+	    LEFT JOIN {course} AS c ON (c.id = gi.courseid)
+	    LEFT JOIN {user} AS u ON (u.id = gg.userid)
     ";
 
     //If used in cron
@@ -149,19 +151,19 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         if(!empty($arrname[2])){
             $val = preg_replace("/[^a-zA-Z]+/", "", $arrname[2]);
 
-            $arraykeys = array_keys(SETTINGSTYPESEMESTER);
+            $arraykeys = array_keys(GRADESTYPESEMESTER);
 
             if(in_array($val, $arraykeys)){
-                $semestrvalue = SETTINGSTYPESEMESTER[$val];
+                $semestrvalue = GRADESTYPESEMESTER[$val];
             }
         }
 
-        //Prepare SM_OBJID and E_OBJID
+        // Prepare SM_OBJID and E_OBJID
         $arridnumber = explode('-', $item->course_idnumber);
         $smobjid = (isset($arridnumber[1])) ? $arridnumber[1] : '';
         $eobjid = (isset($arridnumber[0])) ? $arridnumber[0] : '';
 
-        //Validation
+        // Validation
         if(empty($yearvalue) || strlen($yearvalue) != 4 || !is_numeric($yearvalue)) continue;
         if(empty($semestrvalue)) continue;
         if(empty($smobjid) || !is_numeric($smobjid)) continue;
@@ -172,10 +174,26 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         $data[$num]['SM_OBJID'] = $smobjid;
         $data[$num]['E_OBJID'] = $eobjid;
 
-        $data[$num]['MOODLE_ID'] = $item->moodle_id;
-        $data[$num]['Student12'] = $item->student12;
+        if(!empty($item->iteminstance)){
+            $data[$num]['MOODLE_ID'] = $item->iteminstance;
+        }else{
+            $data[$num]['MOODLE_ID'] = $item->id + 180000;
+        }
+
+        $data[$num]['Student12'] = str_pad($item->student12, 12, '0', STR_PAD_LEFT);
         $data[$num]['Grade'] = $item->grade;
         $data[$num]['Passed'] = '';
+
+        //Lecturer_ID
+        $context = context_course::instance($item->course_id);
+        $role = $DB->get_record('role', array('shortname' => 'teacher'));
+        $teachers = get_role_users($role->id, $context);
+        $firstteacher=reset($teachers);
+        if(!empty($firstteacher)){
+            $data[$num]['Lecturer_ID'] = str_pad($firstteacher->idnumber, 12, '0', STR_PAD_LEFT);
+        }else{
+            $data[$num]['Lecturer_ID'] = '';
+        }
 
         if($item->last_updated == null || empty($item->last_updated)){
             $data[$num]['LAST_UPDATED'] = date('Ymd', $item->timecreated);
@@ -184,9 +202,7 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         }
         
         $num++;
-        $usedids[] = $item->id;
     }
-
 
     $time_elapsed_secs = microtime(true) - $start;
     local_exportmodgrades_log_file_success('Process took  '.$time_elapsed_secs.' sec');
