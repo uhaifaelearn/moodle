@@ -175,7 +175,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
 
             $select = " 
                 WHERE (gi.itemmodule='".$mod."' OR (gi.itemmodule IS NULL AND gi.itemtype!='course') OR gi.itemtype='category') 
-                AND IF(a.timemodified IS NOT NULL, GREATEST(a.timemodified, gi.timemodified), gi.timemodified ) BETWEEN ? AND ?
+                AND IF(a.timemodified IS NOT NULL, GREATEST(a.timemodified, gi.timemodified), gi.timemodified ) BETWEEN ? AND ?                
             ";
 
             if($postdata->year != 0){
@@ -230,7 +230,6 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
         }
     }
 
-
     foreach($courses as $course){
         $items = exportmodsettings_build_grade_course($course['courseid']);
         $yearvalue = $course['yearvalue'];
@@ -241,6 +240,21 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
         foreach($items['data'] as $item) {
 
             if(empty($item->assign_type)) continue;
+
+            //Use dates between
+            if(!empty($attributes)){
+                if(count($attributes) == 1){
+                    if($item->timemodified < $attributes[0]){
+                        continue;
+                    }
+                }
+
+                if(count($attributes) == 2){
+                    if($item->timemodified < $attributes[0] || $item->timemodified > $attributes[1]){
+                        continue;
+                    }
+                }
+            }
 
             $data[$num]['YEAR'] = $yearvalue;
             $data[$num]['SEMESTER'] = $semestrvalue;
@@ -298,6 +312,7 @@ function local_exportmodsettings_encodeFunc($value) {
 }
 
 function exportmodsettings_recursive($children, $result) {
+    global $DB;
 
     $obj = new \StdClass();
     $object = $children['object'];
@@ -359,8 +374,24 @@ function exportmodsettings_recursive($children, $result) {
             $obj->count_children = 0;
             $obj->assign_name = $object->itemname;
             $obj->obligatory = ($object->hidden == 0)?'X':'';
+
+            //Change timecreated and timemodified if mod
             $obj->timecreated = $object->timecreated;
             $obj->timemodified = $object->timemodified;
+
+            if($object->itemtype == 'mod'){
+                $row = $DB->get_record($object->itemmodule, array('id' => $object->iteminstance));
+
+                if(!empty($row)){
+                    if($row->timecreated > $object->timecreated){
+                        $obj->timecreated = $row->timecreated;
+                    }
+
+                    if($row->timemodified > $object->timemodified){
+                        $obj->timemodified = $row->timemodified;
+                    }
+                }
+            }
 
             //categoryid
             if($object->categoryid != $result['course_category']){
@@ -393,16 +424,8 @@ function exportmodsettings_build_grade_course($courseid) {
         $result = exportmodsettings_recursive($child, $result);
     }
 
-
-    //echo '<pre>';print_r($childrens);exit;
-    //echo '<pre>';print_r($result);exit;
-
     return $result;
 }
-
-//$h = exportmodsettings_build_grade_course(3902);
-//echo '<pre>';print_r($h);exit;
-
 
 function local_exportmodsettings_save_file_to_disk($postdata = array()){
     global $DB, $CFG;
