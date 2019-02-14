@@ -26,6 +26,8 @@
  * Hook function to extend the course settings navigation. Call all context functions
  */
 
+require_once $CFG->dirroot.'/grade/lib.php';
+
 define("SETTINGSCRONPERIODSSELECT", array(
     0 => get_string('day'),
     1 => get_string('twodays', 'local_exportmodsettings'),
@@ -66,9 +68,6 @@ define("SETTINGSCATEGORYOFFSET", 90000);
 function local_exportmodsettings_generate_output_csv($output, $postdata = array()){
     global $DB, $CFG;
 
-    //require_once $CFG->dirroot.'/grade/lib.php';
-    //$gtree = new grade_tree(5810, false, false);
-
     $num = 0;
     $data = array();
     $usedids = array();
@@ -92,6 +91,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
     );
 
     $listmods = array();
+    $courses = array();
 
     //Get list mods
     $sql = "
@@ -117,6 +117,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             gi.id,
             c.shortname AS course_name,
             c.idnumber AS course_idnumber,
+            gi.courseid AS course_id,
             
             (CASE 
                 WHEN gi.itemtype='category' THEN gi.iteminstance+90000
@@ -195,8 +196,6 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
 
         foreach ($result as $item) {
 
-            if(in_array($item->id, $usedids)) continue;
-
             //Prepare YEAR and SEMESTER
             $arrname = explode('-', $item->course_name);
             $yearvalue = (isset($arrname[3])) ? $arrname[3] - 1 : '';
@@ -223,43 +222,39 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             if(empty($smobjid) || !is_numeric($smobjid)) continue;
             if(empty($eobjid) || !is_numeric($eobjid)) continue;
 
-            // Recalculate for categoryid (course) : if_child_of_category, parent_assign
-            if(!empty($item->parent_assign)) {
-                $sql = "
-                    SELECT *
-                    FROM {grade_items}
-                    WHERE iteminstance=? AND itemtype='course'
-                ";
-                $res = $DB->get_records_sql($sql, array($item->parent_assign));
+            $courses[$item->course_id]['courseid'] = $item->course_id;
+            $courses[$item->course_id]['yearvalue'] = $yearvalue;
+            $courses[$item->course_id]['semestrvalue'] = $semestrvalue;
+            $courses[$item->course_id]['smobjid'] = $smobjid;
+            $courses[$item->course_id]['eobjid'] = $eobjid;
+        }
+    }
 
-                if (count($res) > 0) {
-                    $item->parent_assign = '';
-                    $item->if_child_of_category = 0;
+    foreach($courses as $course){
+        $items = exportmodsettings_build_grade_course($course['courseid']);
+        $yearvalue = $course['yearvalue'];
+        $semestrvalue = $course['semestrvalue'];
+        $smobjid = $course['smobjid'];
+        $eobjid = $course['eobjid'];
+
+        foreach($items['data'] as $item) {
+
+            if(empty($item->assign_type)) continue;
+
+            //Use dates between
+            if(!empty($attributes)){
+                if(count($attributes) == 1){
+                    if($item->timemodified < $attributes[0]){
+                        continue;
+                    }
+                }
+
+                if(count($attributes) == 2){
+                    if($item->timemodified < $attributes[0] || $item->timemodified > $attributes[1]){
+                        continue;
+                    }
                 }
             }
-
-            if(empty($item->parent_assign)) {
-                $item->if_child_of_category = 0;
-            }
-
-            // Assign type
-            $assigntype = '';
-            if($item->itemtype == 'category'){
-                if($item->count_children_in_category) $assigntype = 10;
-            }else{
-                if($item->if_child_of_category) $assigntype = 11;
-                if(!$item->if_child_of_category) $assigntype = 12;
-            }
-
-            // Obligatory
-            $obligatory = '';
-            if($item->obligatory == 1) $obligatory = 'X';
-
-            // parent assign
-            $parentassign = (!empty($item->parent_assign))?$item->parent_assign + 90000:'';
-
-            //Validation
-            if(empty($assigntype)) continue;
 
             $data[$num]['YEAR'] = $yearvalue;
             $data[$num]['SEMESTER'] = $semestrvalue;
@@ -269,23 +264,22 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             $data[$num]['MOODLE_ID'] = $item->moodle_id;
             $data[$num]['ASSIGN_NAME'] = htmlspecialchars_decode(trim(str_replace(',', ' ', $item->assign_name)));
             $data[$num]['WEIGHT'] = round($item->weight, 5);
-            $data[$num]['OBLIGATORY'] = $obligatory;
+            $data[$num]['OBLIGATORY'] = $item->obligatory;
             $data[$num]['PASS_GRADE'] = round($item->pass_grade, 5);
 
-            $data[$num]['ASSIGN_REQ'] = $item->count_children_in_category;
-            $data[$num]['ASSIGN_FOR_AVG'] = $item->count_children_in_category;
-            $data[$num]['PARENT_ASSIGN'] = $parentassign;
+            $data[$num]['ASSIGN_REQ'] = ($item->count_children)?$item->count_children:'';
+            $data[$num]['ASSIGN_FOR_AVG'] = ($item->count_children)?$item->count_children:'';
+            $data[$num]['PARENT_ASSIGN'] = $item->categoryid;
             $data[$num]['SUPPORTIVE_GRADE'] = '';
-            $data[$num]['ASSIGN_TYPE'] = $assigntype;
+            $data[$num]['ASSIGN_TYPE'] = $item->assign_type;
 
-            if($item->last_updated == null || empty($item->last_updated)){
+            if ($item->timemodified == null || empty($item->timemodified)) {
                 $data[$num]['LAST_UPDATED'] = date('Ymd', $item->timecreated);
-            }else{
-                $data[$num]['LAST_UPDATED'] = date('Ymd', $item->last_updated);
+            } else {
+                $data[$num]['LAST_UPDATED'] = date('Ymd', $item->timemodified);
             }
 
             $num++;
-            $usedids[] = $item->id;
         }
     }
 
@@ -315,6 +309,122 @@ function local_exportmodsettings_encodeFunc($value) {
     $value = str_replace('"','\"',$value);
     // force wrap value in quotes and return
     return $value;
+}
+
+function exportmodsettings_recursive($children, $result) {
+    global $DB;
+
+    $obj = new \StdClass();
+    $object = $children['object'];
+
+    $obj->type = $children['type'];
+
+    $obj->table = $object->table;
+    $obj->itemtype = $object->itemtype;
+    $obj->itemmodule = $object->itemmodule;
+
+    switch ($children['type']) {
+        case 'courseitem':
+            $result['course_category'] = $object->iteminstance;
+            return $result;
+            break;
+
+        case 'categoryitem':
+            return $result;
+            break;
+
+        case 'category':
+            $first_item = reset($children['children']);
+
+            $obj->moodle_id = $object->id + 90000;
+            $obj->weight = $first_item['object']->aggregationcoef;
+            $obj->pass_grade = $first_item['object']->gradepass;
+            $obj->obligatory = ($first_item['object']->hidden == 0)?'X':'';
+            $obj->timecreated = $first_item['object']->timecreated;
+            $obj->timemodified = $first_item['object']->timemodified;
+
+            if(isset($children['children']) && count($children['children']) != 0) {
+                $obj->count_children = count($children['children']) - 1;
+            }else{
+                $obj->count_children = 0;
+            }
+
+            $obj->assign_name = $object->fullname;
+            $obj->categoryid = $object->categoryid;
+
+            //assigntype
+            if($obj->count_children > 0) $obj->assign_type = 10;
+            else $obj->assign_type = '';
+
+            foreach($children['children'] as $child) {
+                $result = exportmodsettings_recursive($child, $result);
+            }
+            break;
+
+        default:
+
+            //Not quiz
+            if($object->itemtype == 'mod' && $object->itemmodule == 'quiz'){
+                return $result;
+            }
+
+            $obj->moodle_id = $object->iteminstance;
+            $obj->weight = $object->aggregationcoef;
+            $obj->pass_grade = $object->gradepass;
+            $obj->count_children = 0;
+            $obj->assign_name = $object->itemname;
+            $obj->obligatory = ($object->hidden == 0)?'X':'';
+
+            //Change timecreated and timemodified if mod
+            $obj->timecreated = $object->timecreated;
+            $obj->timemodified = $object->timemodified;
+
+            if($object->itemtype == 'mod'){
+                $row = $DB->get_record($object->itemmodule, array('id' => $object->iteminstance));
+
+                if(!empty($row)){
+                    if($row->timecreated > $object->timecreated){
+                        $obj->timecreated = $row->timecreated;
+                    }
+
+                    if($row->timemodified > $object->timemodified){
+                        $obj->timemodified = $row->timemodified;
+                    }
+                }
+            }
+
+            //categoryid
+            if($object->categoryid != $result['course_category']){
+                $obj->categoryid = !empty($object->categoryid)?$object->categoryid + 90000:'';
+            }else{
+                $obj->categoryid = '';
+            }
+
+            //manual
+            if($obj->itemtype == 'manual') $obj->moodle_id = $object->id + 180000;
+
+            //assigntype
+            if($obj->categoryid) $obj->assign_type = 11;
+            if(!$obj->categoryid) $obj->assign_type = 12;
+    }
+
+    $result['data'][] = $obj;
+
+    return $result;
+}
+
+function exportmodsettings_build_grade_course($courseid) {
+    $result = array();
+
+    $gtree = new grade_tree($courseid, false, false);
+    $topelement = $gtree->top_element;
+    $childrens = $topelement['children'];
+
+    foreach($childrens as $child){
+        $result = exportmodsettings_recursive($child, $result);
+    }
+
+    return $result;
 }
 
 function local_exportmodsettings_save_file_to_disk($postdata = array()){
