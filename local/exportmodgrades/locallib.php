@@ -94,6 +94,8 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
             c.shortname AS course_name,
             c.idnumber AS course_idnumber,
             gi.iteminstance AS iteminstance,
+            gi.itemtype AS itemtype,
+            gi.itemmodule AS itemmodule,            
             u.idnumber AS student12,
             gg.finalgrade AS grade,
             gg.timecreated AS timecreated,                
@@ -110,12 +112,11 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'crontime'));
         $periodago = GRADESCRONPERIODS[$row->value];
 
+        $select = " WHERE gg.finalgrade IS NOT NULL AND gi.itemtype != 'course' AND gi.itemmodule != 'quiz' ";
+
         if($periodago != 0) {
             $attributes = array(time() - $periodago);
-            $select = " WHERE gg.finalgrade IS NOT NULL AND gg.timemodified > ? ";
-        }else{
-            $attributes = array();
-            $select = " WHERE gg.finalgrade IS NOT NULL ";
+            $select .= " AND gg.timemodified > ? ";
         }
     }
 
@@ -123,7 +124,7 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
     if(!empty($postdata) and isset($postdata->exportfile)){
         $attributes = array($postdata->startdate, $postdata->enddate);
         $select = "        
-            WHERE gg.finalgrade IS NOT NULL AND gg.timemodified BETWEEN ? AND ?
+            WHERE gg.finalgrade IS NOT NULL AND gi.itemtype != 'course' AND gi.itemmodule != 'quiz' AND gg.timemodified BETWEEN ? AND ?
         ";
 
         if($postdata->year != 0){
@@ -174,20 +175,42 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         $data[$num]['SM_OBJID'] = $smobjid;
         $data[$num]['E_OBJID'] = $eobjid;
 
-        if(!empty($item->iteminstance)){
-            $data[$num]['MOODLE_ID'] = $item->iteminstance;
-        }else{
-            $data[$num]['MOODLE_ID'] = $item->id + 180000;
+        switch ($item->itemtype) {
+            case 'manual':
+                $moodleid = $item->id + 180000;
+                break;
+
+            case 'category':
+                $moodleid = $item->id + 90000;
+                break;
+
+            default:
+                $moodleid = $item->iteminstance;
         }
 
+        $data[$num]['MOODLE_ID'] = $moodleid;
         $data[$num]['Student12'] = str_pad($item->student12, 12, '0', STR_PAD_LEFT);
         $data[$num]['Grade'] = $item->grade;
         $data[$num]['Passed'] = '';
 
         //Lecturer_ID
         $context = context_course::instance($item->course_id);
-        $role = $DB->get_record('role', array('shortname' => 'teacher'));
+
+        //Editing teacher
+        $role = $DB->get_record('role', array('shortname' => 'editingteacher'));
         $teachers = get_role_users($role->id, $context);
+
+        //Teacher
+        $role = $DB->get_record('role', array('shortname' => 'teacher'));
+        $teachers = array_merge($teachers, get_role_users($role->id, $context));
+
+        //Coursecreator
+//        $role = $DB->get_record('role', array('shortname' => 'coursecreator'));
+//        $teachers = array_merge($teachers, get_role_users($role->id, $context));
+
+        //$arridnumbers = array_column($teachers, 'idnumber');
+        //$arridnumbers = array_filter($arridnumbers);
+
         $firstteacher=reset($teachers);
         if(!empty($firstteacher)){
             $data[$num]['Lecturer_ID'] = str_pad($firstteacher->idnumber, 12, '0', STR_PAD_LEFT);
