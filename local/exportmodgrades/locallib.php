@@ -190,7 +190,7 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
 
         $data[$num]['MOODLE_ID'] = $moodleid;
         $data[$num]['Student12'] = str_pad($item->student12, 12, '0', STR_PAD_LEFT);
-        $data[$num]['Grade'] = $item->grade;
+        $data[$num]['Grade'] = round($item->grade, 5);
         $data[$num]['Passed'] = '';
 
         //Lecturer_ID
@@ -202,6 +202,10 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
 
         //Teacher
         $role = $DB->get_record('role', array('shortname' => 'teacher'));
+        $teachers = array_merge($teachers, get_role_users($role->id, $context));
+
+        //Teacher Assistant
+        $role = $DB->get_record('role', array('shortname' => 'teachingassistant'));
         $teachers = array_merge($teachers, get_role_users($role->id, $context));
 
         //Coursecreator
