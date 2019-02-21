@@ -190,7 +190,7 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
 
         $data[$num]['MOODLE_ID'] = $moodleid;
         $data[$num]['Student12'] = str_pad($item->student12, 12, '0', STR_PAD_LEFT);
-        $data[$num]['Grade'] = round($item->grade, 5);
+        $data[$num]['Grade'] = round($item->grade);
         $data[$num]['Passed'] = '';
 
         //Lecturer_ID
