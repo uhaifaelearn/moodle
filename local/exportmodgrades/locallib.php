@@ -292,7 +292,7 @@ function local_exportmodgrades_download_file($postdata){
 
     local_exportmodgrades_save_file_to_disk($postdata);
 
-    $folderPath = $CFG->dataroot.'/sap';
+    $folderPath = $CFG->dataroot.'/sap_grades';
     $filename = 'MoodleGrades-'.date("Ymd").'.csv';
     $pathToFile = $folderPath.'/'.$filename;
 
