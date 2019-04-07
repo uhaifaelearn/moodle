@@ -118,6 +118,10 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             c.shortname AS course_name,
             c.idnumber AS course_idnumber,
             gi.courseid AS course_id,
+            gc.aggregation AS aggregation,
+            gc.aggregateonlygraded AS aggregateonlygraded,
+            gc.keephigh AS keephigh,
+            gc.droplow AS droplow,
             
             (CASE 
                 WHEN gi.itemtype='category' THEN gi.iteminstance+90000
@@ -343,16 +347,28 @@ function exportmodsettings_recursive($children, $result) {
             $obj->timecreated = $first_item['object']->timecreated;
             $obj->timemodified = $first_item['object']->timemodified;
 
-            if(isset($children['children']) && count($children['children']) != 0) {
-                $obj->count_children = count($children['children']) - 1;
-            }else{
-                $obj->count_children = 0;
+            // Set default.
+            $obj->count_children = 0;
+            if($first_item['object']->aggregateonlygraded == 1) {
+                if ($first_item['object']->keephigh != 0) {
+                    $obj->count_children = $first_item['object']->keephigh;
+                }
+
+                if ($first_item['object']->droplow != 0) {
+                    if (isset($children['children']) && count($children['children']) != 0) {
+                        $obj->count_children = count($children['children']) - 1 - $first_item['object']->droplow;
+                    }
+                }
+            }else {
+                if (isset($children['children']) && count($children['children']) != 0) {
+                    $obj->count_children = count($children['children']) - 1;
+                }
             }
 
             $obj->assign_name = $object->fullname;
             $obj->categoryid = $object->categoryid;
 
-            //assigntype
+            // Assigntype.
             if($obj->count_children > 0) $obj->assign_type = 10;
             else $obj->assign_type = '';
 
