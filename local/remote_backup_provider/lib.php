@@ -13,12 +13,24 @@
 //
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
 /**
+ * Library functions for local_remote_backup_provider
+ *
  * @package    local_remote_backup_provider
  * @copyright  2015 Lafayette College ITS
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * Extends core navigation to display the remote backup link in the course administration.
+ *
+ * @param navigation_node $navigation The navigation node to extend
+ * @param stdClass        $course The course object
+ * @param context         $context The course context
+ */
 function local_remote_backup_provider_extend_navigation_course($navigation, $course, $context) {
     if (has_capability('local/remote_backup_provider:access', $context)) {
         $url = new moodle_url('/local/remote_backup_provider/index.php', array('id' => $course->id));
@@ -27,6 +39,18 @@ function local_remote_backup_provider_extend_navigation_course($navigation, $cou
     }
 }
 
+/**
+ * Defines custom file provider for downloading backup from remote site.
+ *
+ * @param stdClass $course the course object
+ * @param stdClass $cm the course module object
+ * @param stdClass $context the context
+ * @param string $filearea the name of the file area
+ * @param array $args extra arguments (itemid, path)
+ * @param bool $forcedownload whether or not force download
+ * @param array $options additional options affecting the file serving
+ * @return bool false if the file not found, just send the file otherwise and do not return anything
+ */
 function local_remote_backup_provider_pluginfile($course, $cm, $context, $filearea, $args, $forcedownload, array $options=array()) {
     // Check that the filearea is sane.
     if ($filearea !== 'backup') {
@@ -57,31 +81,4 @@ function local_remote_backup_provider_pluginfile($course, $cm, $context, $filear
         return false;
     }
     send_stored_file($file, 0, 0, $forcedownload, $options);
-}
-
-function local_remote_backup_provider_cron() {
-    global $DB;
-    mtrace('Deleting old remote backup files');
-
-    // Get component files.
-    $records = $DB->get_records('files', array('component' => 'local_remote_backup_provider', 'filearea' => 'backup'));
-    $fs = get_file_storage();
-
-    foreach ($records as $record) {
-        if ($record->timemodified < (time() - DAYSECS) && ($record->filepath != '.')) {
-            $file = $fs->get_file(
-                $record->contextid,
-                $record->component,
-                $record->filearea,
-                $record->itemid,
-                $record->filepath,
-                $record->filename
-            );
-            if ($file) {
-                $file->delete();
-                mtrace('Deleted ' . $record->pathnamehash);
-            }
-        }
-    }
-    return true;
 }

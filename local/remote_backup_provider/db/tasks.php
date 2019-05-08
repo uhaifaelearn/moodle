@@ -15,17 +15,23 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * local_remote_backup_provider version information
+ * Task database definitions.
  *
  * @package    local_remote_backup_provider
- * @copyright  2015 Lafayette College ITS
+ * @copyright  2018 Lafayette College ITS
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->component = 'local_remote_backup_provider';
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = 'v3.4.1';
-$plugin->requires  = 2017111300;
-$plugin->version   = 2018112700;
+$tasks = array(
+    array(
+        'classname' => 'local_remote_backup_provider\task\remove_old',
+        'blocking' => 0,
+        'minute' => '0',
+        'hour' => '0',
+        'day' => '*/5',
+        'dayofweek' => '*',
+        'month' => '*',
+    ),
+);
