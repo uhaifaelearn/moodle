@@ -268,7 +268,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             $data[$num]['MOODLE_ID'] = $item->moodle_id;
             $data[$num]['ASSIGN_NAME'] = htmlspecialchars_decode(trim(str_replace(',', ' ', $item->assign_name)));
             $data[$num]['WEIGHT'] = round($item->weight);
-            $data[$num]['OBLIGATORY'] = $item->obligatory;
+            $data[$num]['OBLIGATORY'] = ''; //$item->obligatory;
             $data[$num]['PASS_GRADE'] = round($item->pass_grade);
 
             $data[$num]['ASSIGN_REQ'] = ($item->count_children)?$item->count_children:'';
