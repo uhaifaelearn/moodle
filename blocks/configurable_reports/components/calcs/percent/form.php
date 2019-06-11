@@ -15,20 +15,29 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Admin presets block main controller
- *
- * @package          blocks/admin_presets
- * @copyright        2019 Pimenko <support@pimenko.com><pimenko.com>
- * @author           Jordan Kesraoui | DigiDago
- * @orignalauthor    David Monllaó <david.monllao@urv.cat>
- * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * Configurable Reports
+ * A Moodle block for creating customizable reports
+ * @package block_configurable_reports
+ * @author David Pesce <davidpesce@gmail.com>
+ * @date 2019
  */
 
-defined('MOODLE_INTERNAL') || die();
+if (!defined('MOODLE_INTERNAL')) {
+    // It must be included from a Moodle page.
+    die('Direct access to this script is forbidden.');
+}
 
-$plugin->version = 2019052000;
-$plugin->requires = 2016052300;        // Requires this Moodle version
-$plugin->component = 'block_admin_presets';
-$plugin->release = '3.0';
-$plugin->cron     = 0;
-$plugin->maturity = MATURITY_STABLE;
+require_once($CFG->libdir.'/formslib.php');
+
+class percent_form extends moodleform {
+
+    public function definition() {
+        global $DB, $USER, $CFG;
+
+        $mform =& $this->_form;
+		    $this->_customdata['compclass']->add_form_elements($mform, $this->_customdata['report']->components);
+
+        // Buttons.
+        $this->add_action_buttons(true, get_string('add'));
+    }
+}
