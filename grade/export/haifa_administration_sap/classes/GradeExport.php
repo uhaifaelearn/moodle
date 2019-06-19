@@ -218,7 +218,7 @@ class GradeExport extends grade_export
         }
         
         
-        $path_to_directory = $CFG->dataroot.'/sap';
+        $path_to_directory = $CFG->dataroot.'/sapquiz';
         if (!file_exists($path_to_directory)) {
             mkdir($path_to_directory, 0777, true);
         }        
