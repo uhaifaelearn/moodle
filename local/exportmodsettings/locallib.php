@@ -102,10 +102,15 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
 
     $result = $DB->get_records_sql($sql);
 
+    //foreach($result as $item){
+    //    if($item->itemmodule != 'quiz'){
+    //        $listmods[] = $item->itemmodule;
+    //    }
+    //}
+
+    // With quiz.
     foreach($result as $item){
-        if($item->itemmodule != 'quiz'){
-            $listmods[] = $item->itemmodule;
-        }
+        $listmods[] = $item->itemmodule;
     }
 
     //Start test time execute
@@ -380,9 +385,9 @@ function exportmodsettings_recursive($children, $result) {
         default:
 
             //Not quiz
-            if($object->itemtype == 'mod' && $object->itemmodule == 'quiz'){
-                return $result;
-            }
+            //if($object->itemtype == 'mod' && $object->itemmodule == 'quiz'){
+            //    return $result;
+            //}
 
             $obj->moodle_id = $object->iteminstance;
             $obj->weight = $object->aggregationcoef;
