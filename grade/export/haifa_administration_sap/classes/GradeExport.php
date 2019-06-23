@@ -299,6 +299,7 @@ class GradeExport extends grade_export
            $result_sorted_tmp = array();
            $result_sorted_tmp['SM_Objid'] = $item_user->SM_Objid;
            $result_sorted_tmp['ST_Objid'] = $item_user->ST_Objid;
+           $result_sorted_tmp['ST_Objid'] = '';
            $result_sorted_tmp['Student12'] = $item_user->Student12;
            $result_sorted_tmp['Passed'] = $item_user->Passed;
            $result_sorted_tmp['Lecturer_ID'] = $item_user->Lecturer_ID;
