@@ -89,7 +89,8 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
 
     $query ="
         SELECT 
-            gi.id,
+            gg.id,
+            gi.id AS giid,
             c.id AS course_id,
             c.shortname AS course_name,
             c.idnumber AS course_idnumber,
@@ -143,7 +144,7 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
     }
 
     $query .= $select;
-    
+
     $result = $DB->get_records_sql($query, $attributes);
 
     foreach ($result as $item) {
