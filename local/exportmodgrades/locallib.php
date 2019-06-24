@@ -136,10 +136,14 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
             $semester = '-' . $postdata->semester;
             $select .= " AND c.shortname LIKE('%" . $semester . "%') ";
         }
+
+        if($postdata->courseid > 0){
+            $select .= " AND c.id = ".$postdata->courseid." ";
+        }
     }
 
     $query .= $select;
-
+    
     $result = $DB->get_records_sql($query, $attributes);
 
     foreach ($result as $item) {
@@ -227,7 +231,7 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         }else{
             $data[$num]['LAST_UPDATED'] = date('Ymd', $item->last_updated);
         }
-        
+
         $num++;
     }
 

@@ -55,6 +55,10 @@ class general_form extends moodleform {
         $defaulttime = time() - 30*24*60*60;
         $mform->setDefault('startdate',  $defaulttime);
 
+        // Courseid.
+        $attributes = array();
+        $mform->addElement('text', 'courseid', get_string('courseid', 'local_exportmodgrades'), $attributes);
+
         $mform->addElement('submit', 'exportfile', get_string('export_file', 'local_exportmodgrades'));
 
 	}
@@ -65,8 +69,13 @@ class general_form extends moodleform {
         //Export excel
         if(isset($data['exportfile'])){
             if($data['startdate'] > $data['enddate']){
-                $errors['enddate'] = get_string('wrong_dates', 'local_exportmodgrades');;
+                $errors['enddate'] = get_string('wrong_dates', 'local_exportmodgrades');
             }
+        }
+
+        //Check input courseid.
+        if(!empty($data['courseid']) && (!is_numeric($data['courseid']) || $data['courseid'] < 0)){
+            $errors['courseid'] = get_string('wrong_courseid', 'local_exportmodgrades');
         }
 
         return $errors;
