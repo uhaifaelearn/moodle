@@ -112,10 +112,7 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'crontime'));
         $periodago = GRADESCRONPERIODS[$row->value];
 
-        //$select = " WHERE gg.finalgrade IS NOT NULL AND gi.itemtype != 'course' AND gi.itemmodule != 'quiz' AND gi.hidden = 0 ";
-
-        // With quiz.
-        $select = " WHERE gg.finalgrade IS NOT NULL AND gi.itemtype != 'course' AND gi.hidden = 0 ";
+        $select = " WHERE gg.finalgrade IS NOT NULL AND gi.itemtype != 'course' AND gi.itemmodule != 'quiz' AND gi.hidden = 0 ";
 
         if($periodago != 0) {
             $attributes = array(time() - $periodago);
@@ -126,13 +123,8 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
     //If used in download file
     if(!empty($postdata) and isset($postdata->exportfile)){
         $attributes = array($postdata->startdate, $postdata->enddate);
-        //$select = "
-        //    WHERE gg.finalgrade IS NOT NULL AND gi.itemtype != 'course' AND gi.itemmodule != 'quiz' AND gi.hidden = 0 AND gg.timemodified BETWEEN ? AND ?
-        //";
-
-        // With quiz.
         $select = "        
-            WHERE gg.finalgrade IS NOT NULL AND gi.itemtype != 'course' AND gi.hidden = 0 AND gg.timemodified BETWEEN ? AND ?
+            WHERE gg.finalgrade IS NOT NULL AND gi.itemtype != 'course' AND gi.itemmodule != 'quiz' AND gi.hidden = 0 AND gg.timemodified BETWEEN ? AND ?
         ";
 
         if($postdata->year != 0){
@@ -144,10 +136,14 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
             $semester = '-' . $postdata->semester;
             $select .= " AND c.shortname LIKE('%" . $semester . "%') ";
         }
+
+        if($postdata->courseid > 0){
+            $select .= " AND c.id = ".$postdata->courseid." ";
+        }
     }
 
     $query .= $select;
-
+    
     $result = $DB->get_records_sql($query, $attributes);
 
     foreach ($result as $item) {
