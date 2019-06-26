@@ -102,15 +102,10 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
 
     $result = $DB->get_records_sql($sql);
 
-    //foreach($result as $item){
-    //    if($item->itemmodule != 'quiz'){
-    //        $listmods[] = $item->itemmodule;
-    //    }
-    //}
-
-    // With quiz.
     foreach($result as $item){
-        $listmods[] = $item->itemmodule;
+        if($item->itemmodule != 'quiz'){
+            $listmods[] = $item->itemmodule;
+        }
     }
 
     //Start test time execute
@@ -273,7 +268,8 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             $data[$num]['MOODLE_ID'] = $item->moodle_id;
             $data[$num]['ASSIGN_NAME'] = htmlspecialchars_decode(trim(str_replace(',', ' ', $item->assign_name)));
             $data[$num]['WEIGHT'] = round($item->weight);
-            $data[$num]['OBLIGATORY'] = ''; //$item->obligatory;
+	  //  $data[$num]['OBLIGATORY'] = $item->obligatory;
+	    $data[$num]['OBLIGATORY'] = '';
             $data[$num]['PASS_GRADE'] = round($item->pass_grade);
 
             $data[$num]['ASSIGN_REQ'] = ($item->count_children)?$item->count_children:'';
@@ -385,9 +381,9 @@ function exportmodsettings_recursive($children, $result) {
         default:
 
             //Not quiz
-            //if($object->itemtype == 'mod' && $object->itemmodule == 'quiz'){
-            //    return $result;
-            //}
+            if($object->itemtype == 'mod' && $object->itemmodule == 'quiz'){
+                return $result;
+            }
 
             $obj->moodle_id = $object->iteminstance;
             $obj->weight = $object->aggregationcoef;
