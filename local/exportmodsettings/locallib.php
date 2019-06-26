@@ -192,6 +192,10 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
                 $select .= " AND c.shortname LIKE('%" . $semester . "%') ";
             }
 
+            if(!empty($postdata->courseid)){
+                $select .= " AND c.id IN(".$postdata->courseid.") ";
+            }
+
         }
 
         $query .= $select;
@@ -472,7 +476,7 @@ function local_exportmodsettings_save_file_to_disk($postdata = array()){
     local_exportmodsettings_log_file_success('End save file to disk. Saved to file '.$filename);
 }
 
-function local_exportmodsettings_download_file($postdata){
+function local_exportmodsettings_download_file($postdata, $ifcreatefile){
     global $DB, $CFG;
 
     local_exportmodsettings_save_file_to_disk($postdata);
@@ -485,6 +489,11 @@ function local_exportmodsettings_download_file($postdata){
     header("Content-Disposition: attachment; filename=".$filename);
 
     readfile($pathToFile);
+
+    if(!$ifcreatefile) {
+        unlink($pathToFile);
+    }
+
     exit;
 }
 

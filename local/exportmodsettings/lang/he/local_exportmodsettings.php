@@ -30,6 +30,10 @@ $string['page_index'] = 'Settings and export mod settings';
 $string['export_mod'] = 'Export mod settings';
 $string['cron_settings'] = 'Cron settings';
 $string['export_file'] = 'ייצוא קובץ';
+$string['courseid'] = 'קורס ID';
+$string['wrong_courseid'] = 'קורס ID שגוי';
+$string['createfile'] = 'צור קובץ';
+
 $string['year'] = 'שנה';
 $string['semester'] = 'סמסטר';
 $string['start_date'] = 'מתאריך שינוי';

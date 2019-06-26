@@ -7,6 +7,7 @@ require_once('locallib.php');
 class general_form extends moodleform {
 
     public $ifdownload = false;
+    public $ifcreatefile = false;
     public $postdata;
 
 	public function definition() {
@@ -55,8 +56,14 @@ class general_form extends moodleform {
         $defaulttime = time() - 30*24*60*60;
         $mform->setDefault('startdate',  $defaulttime);
 
-        $mform->addElement('submit', 'exportfile', get_string('export_file', 'local_exportmodsettings'));
+        // Courseid.
+        $attributes = array();
+        $mform->addElement('text', 'courseid', get_string('courseid', 'local_exportmodsettings'), $attributes);
 
+        //Checkbox ifcreatefile
+        $mform->addElement('advcheckbox', 'ifcreatefile', get_string('createfile', 'local_exportmodsettings'), 'Enable/Disable', array('group' => 1), array(0, 1));
+
+        $mform->addElement('submit', 'exportfile', get_string('export_file', 'local_exportmodsettings'));
 	}
 
     function validation($data, $files) {
@@ -67,6 +74,18 @@ class general_form extends moodleform {
             if($data['startdate'] > $data['enddate']){
                 $errors['enddate'] = get_string('wrong_dates', 'local_exportmodsettings');;
             }
+        }
+
+        //Check input courseid.
+        if(!empty($data['courseid'])){
+            $arr = explode(',', $data['courseid']);
+            foreach($arr as $item){
+                $courseid = trim($item);
+                if((!is_numeric($courseid) || $courseid < 0)){
+                    $errors['courseid'] = get_string('wrong_courseid', 'local_exportmodgrades');
+                }
+            }
+
         }
 
         return $errors;
@@ -115,6 +134,11 @@ class general_form extends moodleform {
             $this->ifdownload = true;
         }
 
+        //If create file.
+        if(isset($data->ifcreatefile) && $data->ifcreatefile == 1){
+            $this->ifcreatefile = true;
+        }
+
         //echo '<pre>';print_r($data);exit;
     }
 
@@ -124,7 +148,7 @@ class general_form extends moodleform {
 
     public function download() {
         if($this->ifdownload){
-            local_exportmodsettings_download_file($this->postdata);
+            local_exportmodsettings_download_file($this->postdata, $this->ifcreatefile);
         }
     }
 }
