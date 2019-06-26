@@ -139,7 +139,7 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         }
 
         if($postdata->courseid > 0){
-            $select .= " AND c.id = ".$postdata->courseid." ";
+            $select .= " AND c.id IN(".$postdata->courseid.") ";
         }
     }
 
@@ -292,7 +292,7 @@ function local_exportmodgrades_save_file_to_disk($postdata = array()){
     local_exportmodgrades_log_file_success('End save file to disk. Saved to file '.$filename);
 }
 
-function local_exportmodgrades_download_file($postdata){
+function local_exportmodgrades_download_file($postdata, $ifcreatefile){
     global $DB, $CFG;
 
     local_exportmodgrades_save_file_to_disk($postdata);
@@ -305,6 +305,11 @@ function local_exportmodgrades_download_file($postdata){
     header("Content-Disposition: attachment; filename=".$filename);
 
     readfile($pathToFile);
+
+    if(!$ifcreatefile) {
+        unlink($pathToFile);
+    }
+
     exit;
 }
 

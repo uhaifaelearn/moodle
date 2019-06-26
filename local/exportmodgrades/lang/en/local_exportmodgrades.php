@@ -32,6 +32,7 @@ $string['cron_grades'] = 'Cron grades';
 $string['export_file'] = 'Export file';
 $string['courseid'] = 'Course id';
 $string['wrong_courseid'] = 'Wrong course id';
+$string['createfile'] = 'Create file';
 
 $string['year'] = 'Year';
 $string['semester'] = 'Semester';
