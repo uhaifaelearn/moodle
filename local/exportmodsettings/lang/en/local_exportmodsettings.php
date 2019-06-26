@@ -30,6 +30,10 @@ $string['page_index'] = 'Settings and export mod settings';
 $string['export_mod'] = 'Export mod settings';
 $string['cron_settings'] = 'Cron settings';
 $string['export_file'] = 'Export file';
+$string['courseid'] = 'Course id';
+$string['wrong_courseid'] = 'Wrong course id';
+$string['createfile'] = 'Create file';
+
 $string['year'] = 'Year';
 $string['semester'] = 'Semester';
 $string['start_date'] = 'From change date';

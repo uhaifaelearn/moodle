@@ -138,7 +138,7 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
             $select .= " AND c.shortname LIKE('%" . $semester . "%') ";
         }
 
-        if($postdata->courseid > 0){
+        if(!empty($postdata->courseid)){
             $select .= " AND c.id IN(".$postdata->courseid.") ";
         }
     }
