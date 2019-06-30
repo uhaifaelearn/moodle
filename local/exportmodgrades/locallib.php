@@ -150,7 +150,15 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
     foreach ($result as $item) {
 
         // Check if quiz.
-        if($item->itemmodule == 'quiz') continue;
+        if($item->itemmodule == 'quiz'){
+            $plugs = \core_component::get_plugin_list('local');
+            if(isset($plugs['extendedfields'])){
+                $row = $DB->get_record('local_extendedfields', array('instanceid' => $item->iteminstance));
+                if(!empty($row) && $row->status == 1){
+                    continue;
+                }
+            }
+        }
 
         //Prepare YEAR and SEMESTER
         $arrname = explode('-', $item->course_name);
