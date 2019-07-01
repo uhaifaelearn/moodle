@@ -68,8 +68,11 @@ function local_extendedfields_coursemodule_standard_elements($formwrapper, $mfor
  * @param stdClass $course The course.
  */
 function local_extendedfields_coursemodule_edit_post_actions($data, $course) {
-    global $DB;
+    global $DB,$PAGE;
 
+    if (!empty($PAGE->pagetype)||$PAGE->pagetype!='mod-quiz-mod'){
+        return $data;
+    }
     $obj = $DB->get_record('local_extendedfields', array('instanceid' => $data->id));
     if(!empty($obj)){
         $obj->status = $data->quiz_last_semester;
