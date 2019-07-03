@@ -13,6 +13,8 @@ define('UPDATE_WIZARD', 'tool_updatewizard');
 
 global $CFG;
 
+require_once __DIR__ . '/../../lib.php';
+
 require_once __DIR__.'/Psr4Autoloader.php';
 
 /**
