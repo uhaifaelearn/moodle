@@ -149,8 +149,25 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
 
     foreach ($result as $item) {
 
+        $quizenable = false;
+
+        //If used in cron
+        if (empty($postdata)) {
+            $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'ifquizcron'));
+            if(isset($row->value) && $row->value == 1){
+                $quizenable = true;
+            }
+        }
+
+        //If used in download file
+        if (!empty($postdata) and isset($postdata->exportfile)) {
+            if(isset($postdata->ifquiz) && $postdata->ifquiz == 1){
+                $quizenable = true;
+            }
+        }
+
         // Check if quiz.
-        if($item->itemmodule == 'quiz'){
+        if($item->itemmodule == 'quiz' && $quizenable){
             $plugs = \core_component::get_plugin_list('local');
             if(isset($plugs['extendedfields'])){
                 $row = $DB->get_record('local_extendedfields', array('instanceid' => $item->iteminstance));

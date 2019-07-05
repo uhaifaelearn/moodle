@@ -103,11 +103,31 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
     $result = $DB->get_records_sql($sql);
 
     foreach($result as $item){
-        //if($item->itemmodule != 'quiz'){
-        //    $listmods[] = $item->itemmodule;
-        //}
 
-        $listmods[] = $item->itemmodule;
+        $quizenable = false;
+
+        //If used in cron
+        if (empty($postdata)) {
+            $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodsettings', 'name' => 'ifquizcron'));
+            if(isset($row->value) && $row->value == 1){
+                $quizenable = true;
+            }
+        }
+
+        //If used in download file
+        if (!empty($postdata) and isset($postdata->exportfile)) {
+            if(isset($postdata->ifquiz) && $postdata->ifquiz == 1){
+                $quizenable = true;
+            }
+        }
+
+        if($quizenable){
+            $listmods[] = $item->itemmodule;
+        }else{
+            if($item->itemmodule != 'quiz'){
+                $listmods[] = $item->itemmodule;
+            }
+        }
     }
 
     //Start test time execute
