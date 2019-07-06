@@ -167,7 +167,11 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         }
 
         // Check if quiz.
-        if($item->itemmodule == 'quiz' && $quizenable){
+        if($item->itemmodule == 'quiz' && !$quizenable){
+            continue;
+        }
+
+        if($item->itemmodule == 'quiz'){
             $plugs = \core_component::get_plugin_list('local');
             if(isset($plugs['extendedfields'])){
                 $row = $DB->get_record('local_extendedfields', array('instanceid' => $item->iteminstance));
