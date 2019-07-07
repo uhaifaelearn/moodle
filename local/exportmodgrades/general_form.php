@@ -24,6 +24,9 @@ class general_form extends moodleform {
         $select = $mform->addElement('select', 'crontime', get_string('crontime', 'local_exportmodgrades'), GRADESCRONPERIODSSELECT, $attributes);
         $select->setMultiple(false);
 
+        //Checkbox ifquiz
+        $mform->addElement('advcheckbox', 'ifquizcron', get_string('quiz', 'local_exportmodgrades'), 'Enable/Disable', array('group' => 1), array(0, 1));
+
         $mform->addElement('submit', 'submitcrontime', get_string('savechanges'));
 
         //export mod grades
@@ -62,6 +65,9 @@ class general_form extends moodleform {
 
         //Checkbox ifcreatefile
         $mform->addElement('advcheckbox', 'ifcreatefile', get_string('createfile', 'local_exportmodgrades'), 'Enable/Disable', array('group' => 1), array(0, 1));
+
+        //Checkbox ifquiz
+        $mform->addElement('advcheckbox', 'ifquiz', get_string('quiz', 'local_exportmodgrades'), 'Enable/Disable', array('group' => 1), array(0, 1));
 
         $mform->addElement('submit', 'exportfile', get_string('export_file', 'local_exportmodgrades'));
 
@@ -103,6 +109,12 @@ class general_form extends moodleform {
             $defaultdata['crontime'] = $row->value;
         }
 
+        //ifquizcron
+        $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'ifquizcron'));
+        if(!empty($row)){
+            $defaultdata['ifquizcron'] = $row->value;
+        }
+
         //$defaultdata['year'] = date("Y");
         $defaultdata['year'] = 0;
 
@@ -130,6 +142,21 @@ class general_form extends moodleform {
             }
         }
 
+        //Save ifquizcron
+        if(isset($data->submitcrontime)){
+            $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'ifquizcron'));
+            if(!empty($row)){
+                $row->value = $data->ifquizcron;
+                $DB->update_record('config_plugins', $row);
+            }else{
+                $obj = new \stdClass();
+                $obj->plugin = 'local_exportmodgrades';
+                $obj->name = 'ifquizcron';
+                $obj->value = $data->ifquizcron;
+                $DB->insert_record('config_plugins', $obj);
+            }
+        }
+
         // Export excel
         if(isset($data->exportfile)){
             $this->ifdownload = true;
@@ -139,8 +166,6 @@ class general_form extends moodleform {
         if(isset($data->ifcreatefile) && $data->ifcreatefile == 1){
             $this->ifcreatefile = true;
         }
-
-        //echo '<pre>';print_r($data);exit;
     }
 
     public function is_download() {

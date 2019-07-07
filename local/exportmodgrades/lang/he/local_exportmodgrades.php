@@ -33,6 +33,7 @@ $string['export_file'] = 'ייצוא קובץ';
 $string['courseid'] = 'קורס ID';
 $string['wrong_courseid'] = 'קורס ID שגוי';
 $string['createfile'] = 'צור קובץ';
+$string['quiz'] = 'בוחן';
 
 $string['year'] = 'שנה';
 $string['semester'] = 'סמסטר';

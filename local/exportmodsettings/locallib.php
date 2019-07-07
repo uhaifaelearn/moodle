@@ -103,8 +103,30 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
     $result = $DB->get_records_sql($sql);
 
     foreach($result as $item){
-        if($item->itemmodule != 'quiz'){
+
+        $quizenable = false;
+
+        //If used in cron
+        if (empty($postdata)) {
+            $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodsettings', 'name' => 'ifquizcron'));
+            if(isset($row->value) && $row->value == 1){
+                $quizenable = true;
+            }
+        }
+
+        //If used in download file
+        if (!empty($postdata) and isset($postdata->exportfile)) {
+            if(isset($postdata->ifquiz) && $postdata->ifquiz == 1){
+                $quizenable = true;
+            }
+        }
+
+        if($quizenable){
             $listmods[] = $item->itemmodule;
+        }else{
+            if($item->itemmodule != 'quiz'){
+                $listmods[] = $item->itemmodule;
+            }
         }
     }
 
@@ -385,8 +407,19 @@ function exportmodsettings_recursive($children, $result) {
         default:
 
             //Not quiz
+            //if($object->itemtype == 'mod' && $object->itemmodule == 'quiz'){
+            //    return $result;
+            //}
+
+            // Check if quiz.
             if($object->itemtype == 'mod' && $object->itemmodule == 'quiz'){
-                return $result;
+                $plugs = \core_component::get_plugin_list('local');
+                if(isset($plugs['extendedfields'])){
+                    $row = $DB->get_record('local_extendedfields', array('instanceid' => $object->iteminstance));
+                    if(!empty($row) && $row->status == 1){
+                        return $result;
+                    }
+                }
             }
 
             $obj->moodle_id = $object->iteminstance;
