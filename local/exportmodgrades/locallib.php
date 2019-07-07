@@ -222,7 +222,13 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
                 break;
 
             default:
-                $moodleid = $item->iteminstance;
+
+                // TODO QUIZ numeration
+                if($item->itemmodule == 'quiz'){
+                    $moodleid = $item->iteminstance + 40000;
+                }else{
+                    $moodleid = $item->iteminstance;
+                }
         }
 
         $data[$num]['MOODLE_ID'] = $moodleid;

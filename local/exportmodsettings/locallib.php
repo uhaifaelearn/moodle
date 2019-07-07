@@ -261,7 +261,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
     }
 
     foreach($courses as $course){
-        $items = exportmodsettings_build_grade_course($course['courseid']);
+        $items = exportmodsettings_build_grade_course($course['courseid'], $quizenable);
         $yearvalue = $course['yearvalue'];
         $semestrvalue = $course['semestrvalue'];
         $smobjid = $course['smobjid'];
@@ -342,7 +342,7 @@ function local_exportmodsettings_encodeFunc($value) {
     return $value;
 }
 
-function exportmodsettings_recursive($children, $result) {
+function exportmodsettings_recursive($children, $result, $quizenable) {
     global $DB;
 
     $obj = new \StdClass();
@@ -353,6 +353,11 @@ function exportmodsettings_recursive($children, $result) {
     $obj->table = $object->table;
     $obj->itemtype = $object->itemtype;
     $obj->itemmodule = $object->itemmodule;
+
+    // If QUIZ.
+    if($object->itemmodule == 'quiz' && !$quizenable){
+        return $result;
+    }
 
     switch ($children['type']) {
         case 'courseitem':
@@ -422,6 +427,11 @@ function exportmodsettings_recursive($children, $result) {
                 }
             }
 
+            // TODO QUIZ numeration
+            if($object->itemmodule == 'quiz'){
+                $object->iteminstance = $object->iteminstance + 40000;
+            }
+
             $obj->moodle_id = $object->iteminstance;
             $obj->weight = $object->aggregationcoef;
             $obj->pass_grade = $object->gradepass;
@@ -467,7 +477,7 @@ function exportmodsettings_recursive($children, $result) {
     return $result;
 }
 
-function exportmodsettings_build_grade_course($courseid) {
+function exportmodsettings_build_grade_course($courseid, $quizenable) {
     $result = array();
 
     $gtree = new grade_tree($courseid, false, false);
@@ -475,7 +485,7 @@ function exportmodsettings_build_grade_course($courseid) {
     $childrens = $topelement['children'];
 
     foreach($childrens as $child){
-        $result = exportmodsettings_recursive($child, $result);
+        $result = exportmodsettings_recursive($child, $result, $quizenable);
     }
 
     return $result;
