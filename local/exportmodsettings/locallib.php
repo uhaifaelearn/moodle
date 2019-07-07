@@ -405,7 +405,7 @@ function exportmodsettings_recursive($children, $result, $quizenable) {
             else $obj->assign_type = '';
 
             foreach($children['children'] as $child) {
-                $result = exportmodsettings_recursive($child, $result);
+                $result = exportmodsettings_recursive($child, $result, $quizenable);
             }
             break;
 
