@@ -429,7 +429,7 @@ function exportmodsettings_recursive($children, $result, $quizenable) {
 
             // TODO QUIZ numeration
             if($object->itemmodule == 'quiz'){
-                $object->iteminstance = $object->iteminstance + 40000;
+                $object->iteminstance = $object->iteminstance + 200000;
             }
 
             $obj->moodle_id = $object->iteminstance;
