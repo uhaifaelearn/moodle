@@ -46,7 +46,7 @@ class GradeExportForm extends moodleform
      */
     protected function definition()
     {
-        global $PAGE;
+        global $PAGE, $DB;
         
         // is not required now. 
         //$PAGE->requires->js('/grade/export/haifa_administration_sap/javascript/module.js');
@@ -90,12 +90,26 @@ class GradeExportForm extends moodleform
                     continue;
                 }
 
+                // Check QUIZ.
+                if($gradeItem->itemmodule != 'quiz'){
+                    continue;
+                }
+
+                // Check plugin local_extendedfields
+                $plugs = \core_component::get_plugin_list('local');
+                if(isset($plugs['extendedfields'])){
+                    $row = $DB->get_record('local_extendedfields', array('instanceid' => $gradeItem->iteminstance));
+                    if(empty($row) || $row->status != 1){
+                        continue;
+                    }
+                }
+
                 $options_mod_settings[$gradeItem->id] = $gradeItem;                               
                 $options_mod[$gradeItem->id] = $gradeItem->get_name();                
-            }            
+            }
             
-            array_pop($options_mod);
-            array_pop($options_mod_settings);
+            //array_pop($options_mod);
+            //array_pop($options_mod_settings);
             
             $select1 = $mForm->addElement('select', 'itemids', get_string('grade_option2', 'gradeexport_haifa_administration_sap'), $options_mod);
             $select1->setMultiple(true);
