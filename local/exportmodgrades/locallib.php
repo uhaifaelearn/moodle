@@ -77,8 +77,8 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         'MOODLE_ID',
 
         'Student12',
-        'Grade',
         'Passed',
+        'Grade',
         'Lecturer_ID',
 
         'LAST_UPDATED',
