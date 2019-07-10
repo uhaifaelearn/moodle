@@ -242,18 +242,18 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         if($item->gradetype == 2 && $item->scaleid == 3){
             if(!empty($item->grade) && round($item->grade) == 1){
                 $passed = 'F';
-                $item->grade = 0;
+                $item->grade = '';
             }
 
             if(!empty($item->grade) && round($item->grade) == 2){
                 $passed = 'T';
-                $item->grade = 0;
+                $item->grade = '';
             }
         }
 
         $data[$num]['Passed'] = $passed;
 
-        $data[$num]['Grade'] = round($item->grade);
+        $data[$num]['Grade'] = (empty($item->grade))?$item->grade:round($item->grade);
 
         //Lecturer_ID
         $context = context_course::instance($item->course_id);
