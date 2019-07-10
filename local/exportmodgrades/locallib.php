@@ -246,7 +246,7 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
             }
 
             if(!empty($item->grade) && round($item->grade) == 2){
-                $passed = 'T';
+                $passed = 'P';
                 $item->grade = '';
             }
         }
