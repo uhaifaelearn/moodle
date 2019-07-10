@@ -100,7 +100,10 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
             u.idnumber AS student12,
             gg.finalgrade AS grade,
             gg.timecreated AS timecreated,                
-            gg.timemodified AS last_updated                
+            gg.timemodified AS last_updated ,
+            
+            gi.gradetype AS gradetype,               
+            gi.scaleid AS scaleid               
         
         FROM {grade_grades} AS gg
 	    LEFT JOIN {grade_items} AS gi ON (gg.itemid = gi.id)
@@ -234,7 +237,15 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         $data[$num]['MOODLE_ID'] = $moodleid;
         $data[$num]['Student12'] = str_pad($item->student12, 12, '0', STR_PAD_LEFT);
         $data[$num]['Grade'] = round($item->grade);
-        $data[$num]['Passed'] = '';
+
+        // Calculate PASSED T/F.
+        $passed = '';
+        if($item->gradetype == 2 && $item->scaleid == 3){
+            if(!empty($item->grade) && round($item->grade) == 1) $passed = 'F';
+            if(!empty($item->grade) && round($item->grade) == 2) $passed = 'T';
+        }
+
+        $data[$num]['Passed'] = $passed;
 
         //Lecturer_ID
         $context = context_course::instance($item->course_id);
