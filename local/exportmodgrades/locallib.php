@@ -77,8 +77,8 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         'MOODLE_ID',
 
         'Student12',
-        'Passed',
         'Grade',
+        'Passed',
         'Lecturer_ID',
 
         'LAST_UPDATED',
@@ -251,9 +251,9 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
             }
         }
 
-        $data[$num]['Passed'] = $passed;
-
         $data[$num]['Grade'] = (empty($item->grade))?$item->grade:round($item->grade);
+
+        $data[$num]['Passed'] = $passed;
 
         //Lecturer_ID
         $context = context_course::instance($item->course_id);
