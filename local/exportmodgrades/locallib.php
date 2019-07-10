@@ -236,16 +236,24 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
 
         $data[$num]['MOODLE_ID'] = $moodleid;
         $data[$num]['Student12'] = str_pad($item->student12, 12, '0', STR_PAD_LEFT);
-        $data[$num]['Grade'] = round($item->grade);
 
         // Calculate PASSED T/F.
         $passed = '';
         if($item->gradetype == 2 && $item->scaleid == 3){
-            if(!empty($item->grade) && round($item->grade) == 1) $passed = 'F';
-            if(!empty($item->grade) && round($item->grade) == 2) $passed = 'T';
+            if(!empty($item->grade) && round($item->grade) == 1){
+                $passed = 'F';
+                $item->grade = 0;
+            }
+
+            if(!empty($item->grade) && round($item->grade) == 2){
+                $passed = 'T';
+                $item->grade = 0;
+            }
         }
 
         $data[$num]['Passed'] = $passed;
+
+        $data[$num]['Grade'] = round($item->grade);
 
         //Lecturer_ID
         $context = context_course::instance($item->course_id);
