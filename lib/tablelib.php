@@ -687,7 +687,7 @@ class flexible_table {
      * @return string sql to add to where statement.
      */
     function get_sql_where() {
-        global $DB;
+        global $DB, $PAGE;
 
         $conditions = array();
         $params = array();
@@ -697,12 +697,26 @@ class flexible_table {
             $i++;
 
             if (!empty($this->prefs['i_first'])) {
-                $conditions[] = $DB->sql_like('firstname', ':ifirstc'.$i, false, false);
-                $params['ifirstc'.$i] = $this->prefs['i_first'].'%';
+                if($PAGE->navigation->find_active_node()->key == 'participants'){
+                    $conditions[] = $DB->sql_like('firstname', ':ifirstc'.$i, false, false)." OR ".
+                            $DB->sql_like('firstnamephonetic', ':ifirstnamephonetic'.$i, false, false);
+                    $params['ifirstnamephonetic'.$i] = $this->prefs['i_first'].'%';
+                    $params['ifirstc'.$i] = $this->prefs['i_first'].'%';
+                }else{
+                    $conditions[] = $DB->sql_like('firstname', ':ifirstc'.$i, false, false);
+                    $params['ifirstc'.$i] = $this->prefs['i_first'].'%';
+                }
             }
             if (!empty($this->prefs['i_last'])) {
-                $conditions[] = $DB->sql_like('lastname', ':ilastc'.$i, false, false);
-                $params['ilastc'.$i] = $this->prefs['i_last'].'%';
+                if($PAGE->navigation->find_active_node()->key == 'participants') {
+                    $conditions[] = $DB->sql_like('lastname', ':ilastc' . $i, false, false) .
+                            " OR " . $DB->sql_like('lastnamephonetic', ':ilastnamephonetic' . $i, false, false);
+                    $params['ilastc' . $i] = $this->prefs['i_last'] . '%';
+                    $params['ilastnamephonetic' . $i] = $this->prefs['i_last'] . '%';
+                }else{
+                    $conditions[] = $DB->sql_like('lastname', ':ilastc'.$i, false, false);
+                    $params['ilastc'.$i] = $this->prefs['i_last'].'%';
+                }
             }
         }
 
