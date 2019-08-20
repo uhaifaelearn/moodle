@@ -22,8 +22,7 @@
  * Toggles are persistent on a per browser session per course basis but can be made to persist longer by a small
  * code change. Full installation instructions, code adaptions and credits are included in the 'Readme.md' file.
  *
- * @package    course/format
- * @subpackage topcoll
+ * @package    format_topcoll
  * @version    See the value of '$plugin->version' in version.php.
  * @copyright  &copy; 2012-onwards G J Barnard in respect to modifications of standard topics format.
  * @author     G J Barnard - {@link http://moodle.org/user/profile.php?id=442195}
@@ -176,7 +175,15 @@ class format_topcoll extends format_base {
         return $o;
     }
 
-    public function get_section_dates($section, $course, $tcsettings) {
+    public function get_section_dates($section, $course = null, $tcsettings = null) {
+        if (empty($tcsettings) && empty($course)) {
+            return $this->format_topcoll_get_section_dates($section, $this->get_course());
+        }
+
+        if (empty($tcsettings)) {
+            $tcsettings = $this->get_settings();
+        }
+
         $dateformat = get_string('strftimedateshort');
         $o = '';
         if ($tcsettings['layoutstructure'] == 5) {
