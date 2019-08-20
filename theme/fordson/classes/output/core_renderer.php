@@ -1158,7 +1158,7 @@ class core_renderer extends \theme_boost\output\core_renderer {
         }
         $siteadmintitle = get_string('siteadminquicklink', 'theme_fordson');
         $siteadminurl = new moodle_url('/admin/search.php');
-        $hasadminlink = is_siteadmin();
+        $hasadminlink = has_capability('moodle/site:configview', $context);
         $course = $this->page->course;
         // Send to template.
         $dashmenu = ['showincourseonly' => $showincourseonly, 'togglebutton' => $togglebutton, 'togglebuttonstudent' => $togglebuttonstudent, 'hasteacherdash' => $hasteacherdash, 'hasstudentdash' => $hasstudentdash, 'haspermission' => $haspermission, 'hasadminlink' => $hasadminlink, 'siteadmintitle' => $siteadmintitle, 'siteadminurl' => $siteadminurl, ];
@@ -1446,6 +1446,19 @@ class core_renderer extends \theme_boost\output\core_renderer {
                     u.firstnamephonetic, u.lastnamephonetic, u.email, u.picture, u.maildisplay,
                     u.imagealt');
             foreach ($teachers as $staff) {
+                if ($showonlygroupteachers) {
+                    $staffgroups = groups_get_all_groups($course->id, $staff->id);
+                    $found = false;
+                    foreach ($staffgroups as $grp) {
+                        if (in_array($grp->id, $groupids)) {
+                            $found = true;
+                            break;
+                        }
+                    }
+                    if (!$found) {
+                        continue;
+                    }
+                }
                 $picture = $OUTPUT->user_picture($staff, array(
                     'size' => 50
                 ));
@@ -1682,7 +1695,9 @@ class core_renderer extends \theme_boost\output\core_renderer {
         $context->logintopimage = $PAGE->theme->setting_file_url('logintopimage', 'logintopimage');
         $context->hascustomlogin = $PAGE->theme->settings->showcustomlogin == 1;
         $context->hasdefaultlogin = $PAGE->theme->settings->showcustomlogin == 0;
-        $context->alertbox = $PAGE->theme->settings->alertbox;
+        $context->alertbox = format_text($PAGE->theme->settings->alertbox, FORMAT_HTML, array(
+            'noclean' => true
+        ));
         if ($url) {
             $url = $url->out(false);
         }
