@@ -396,13 +396,19 @@ abstract class grade_report {
         $this->userwheresql = "";
         $this->userwheresql_params = array();
         if (isset($SESSION->gradereport['filterfirstname']) && !empty($SESSION->gradereport['filterfirstname'])) {
-            $this->userwheresql .= ' AND '.$DB->sql_like('u.firstname', ':firstname', false, false);
+            $this->userwheresql .= ' AND '.$DB->sql_like('u.firstname', ':firstname', false, false)." OR ".
+                    $DB->sql_like('u.firstnamephonetic', ':firstnamephonetic', false, false);
+
             $this->userwheresql_params['firstname'] = $SESSION->gradereport['filterfirstname'].'%';
+            $this->userwheresql_params['firstnamephonetic'] = $SESSION->gradereport['filterfirstname'].'%';
         }
         if (isset($SESSION->gradereport['filtersurname']) && !empty($SESSION->gradereport['filtersurname'])) {
-            $this->userwheresql .= ' AND '.$DB->sql_like('u.lastname', ':lastname', false, false);
+            $this->userwheresql .= ' AND '.$DB->sql_like('u.lastname', ':lastname', false, false)." OR ".
+                    $DB->sql_like('u.lastnamephonetic', ':lastnamephonetic', false, false);
             $this->userwheresql_params['lastname'] = $SESSION->gradereport['filtersurname'].'%';
+            $this->userwheresql_params['lastnamephonetic'] = $SESSION->gradereport['filtersurname'].'%';
         }
+
     }
 
     /**

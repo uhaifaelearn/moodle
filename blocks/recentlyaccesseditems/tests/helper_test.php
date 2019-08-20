@@ -60,8 +60,8 @@ class block_recentlyaccesseditems_helper_testcase extends advanced_testcase {
         $event2->trigger();
         $recent1 = helper::get_recent_items();
         self::assertCount(2, $recent1);
-        $recentlinited = helper::get_recent_items(1);
-        self::assertCount(1, $recentlinited);
+        $recentlimited = helper::get_recent_items(1);
+        self::assertCount(1, $recentlimited);
         delete_course($coursetodelete, false);
 
         // There should be no errors if a course has been deleted.
