@@ -89,7 +89,8 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
 
     $query ="
         SELECT 
-            gi.id,
+            gg.id,
+            gi.id AS giid,
             c.id AS course_id,
             c.shortname AS course_name,
             c.idnumber AS course_idnumber,
@@ -99,7 +100,10 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
             u.idnumber AS student12,
             gg.finalgrade AS grade,
             gg.timecreated AS timecreated,                
-            gg.timemodified AS last_updated                
+            gg.timemodified AS last_updated ,
+            
+            gi.gradetype AS gradetype,               
+            gi.scaleid AS scaleid               
         
         FROM {grade_grades} AS gg
 	    LEFT JOIN {grade_items} AS gi ON (gg.itemid = gi.id)
@@ -112,7 +116,7 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'crontime'));
         $periodago = GRADESCRONPERIODS[$row->value];
 
-        $select = " WHERE gg.finalgrade IS NOT NULL AND gi.itemtype != 'course' AND gi.itemmodule != 'quiz' AND gi.hidden = 0 ";
+        $select = " WHERE gg.finalgrade IS NOT NULL AND gi.itemtype != 'course' AND gi.hidden = 0 ";
 
         if($periodago != 0) {
             $attributes = array(time() - $periodago);
@@ -124,7 +128,7 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
     if(!empty($postdata) and isset($postdata->exportfile)){
         $attributes = array($postdata->startdate, $postdata->enddate);
         $select = "        
-            WHERE gg.finalgrade IS NOT NULL AND gi.itemtype != 'course' AND gi.itemmodule != 'quiz' AND gi.hidden = 0 AND gg.timemodified BETWEEN ? AND ?
+            WHERE gg.finalgrade IS NOT NULL AND gi.itemtype != 'course' AND gi.hidden = 0 AND gg.timemodified BETWEEN ? AND ?
         ";
 
         if($postdata->year != 0){
@@ -136,6 +140,10 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
             $semester = '-' . $postdata->semester;
             $select .= " AND c.shortname LIKE('%" . $semester . "%') ";
         }
+
+        if(!empty($postdata->courseid)){
+            $select .= " AND c.id IN(".$postdata->courseid.") ";
+        }
     }
 
     $query .= $select;
@@ -143,6 +151,38 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
     $result = $DB->get_records_sql($query, $attributes);
 
     foreach ($result as $item) {
+
+        $quizenable = false;
+
+        //If used in cron
+        if (empty($postdata)) {
+            $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'ifquizcron'));
+            if(isset($row->value) && $row->value == 1){
+                $quizenable = true;
+            }
+        }
+
+        //If used in download file
+        if (!empty($postdata) and isset($postdata->exportfile)) {
+            if(isset($postdata->ifquiz) && $postdata->ifquiz == 1){
+                $quizenable = true;
+            }
+        }
+
+        // Check if quiz.
+        if($item->itemmodule == 'quiz' && !$quizenable){
+            continue;
+        }
+
+        if($item->itemmodule == 'quiz'){
+            $plugs = \core_component::get_plugin_list('local');
+            if(isset($plugs['extendedfields'])){
+                $row = $DB->get_record('local_extendedfields', array('instanceid' => $item->iteminstance));
+                if(!empty($row) && $row->status == 1){
+                    continue;
+                }
+            }
+        }
 
         //Prepare YEAR and SEMESTER
         $arrname = explode('-', $item->course_name);
@@ -177,21 +217,43 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
 
         switch ($item->itemtype) {
             case 'manual':
-                $moodleid = $item->id + 180000;
+                $moodleid = $item->giid + 180000;
                 break;
 
             case 'category':
-                $moodleid = $item->id + 90000;
+                $moodleid = $item->iteminstance + 90000;
                 break;
 
             default:
-                $moodleid = $item->iteminstance;
+
+                // TODO QUIZ numeration
+                if($item->itemmodule == 'quiz'){
+                    $moodleid = $item->iteminstance + 200000;
+                }else{
+                    $moodleid = $item->iteminstance;
+                }
         }
 
         $data[$num]['MOODLE_ID'] = $moodleid;
         $data[$num]['Student12'] = str_pad($item->student12, 12, '0', STR_PAD_LEFT);
-        $data[$num]['Grade'] = round($item->grade);
-        $data[$num]['Passed'] = '';
+
+        // Calculate PASSED T/F.
+        $passed = '';
+        if($item->gradetype == 2 && $item->scaleid == 3){
+            if(!empty($item->grade) && round($item->grade) == 1){
+                $passed = 'F';
+                $item->grade = '';
+            }
+
+            if(!empty($item->grade) && round($item->grade) == 2){
+                $passed = 'P';
+                $item->grade = '';
+            }
+        }
+
+        $data[$num]['Grade'] = (empty($item->grade))?$item->grade:round($item->grade);
+
+        $data[$num]['Passed'] = $passed;
 
         //Lecturer_ID
         $context = context_course::instance($item->course_id);
@@ -227,7 +289,7 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         }else{
             $data[$num]['LAST_UPDATED'] = date('Ymd', $item->last_updated);
         }
-        
+
         $num++;
     }
 
@@ -287,7 +349,7 @@ function local_exportmodgrades_save_file_to_disk($postdata = array()){
     local_exportmodgrades_log_file_success('End save file to disk. Saved to file '.$filename);
 }
 
-function local_exportmodgrades_download_file($postdata){
+function local_exportmodgrades_download_file($postdata, $ifcreatefile){
     global $DB, $CFG;
 
     local_exportmodgrades_save_file_to_disk($postdata);
@@ -300,6 +362,11 @@ function local_exportmodgrades_download_file($postdata){
     header("Content-Disposition: attachment; filename=".$filename);
 
     readfile($pathToFile);
+
+    if(!$ifcreatefile) {
+        unlink($pathToFile);
+    }
+
     exit;
 }
 

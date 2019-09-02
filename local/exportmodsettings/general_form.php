@@ -7,6 +7,7 @@ require_once('locallib.php');
 class general_form extends moodleform {
 
     public $ifdownload = false;
+    public $ifcreatefile = false;
     public $postdata;
 
 	public function definition() {
@@ -22,6 +23,9 @@ class general_form extends moodleform {
         $attributes = array();
         $select = $mform->addElement('select', 'crontime', get_string('crontime', 'local_exportmodsettings'), SETTINGSCRONPERIODSSELECT, $attributes);
         $select->setMultiple(false);
+
+        //Checkbox ifquiz
+        $mform->addElement('advcheckbox', 'ifquizcron', get_string('quiz', 'local_exportmodsettings'), 'Enable/Disable', array('group' => 1), array(0, 1));
 
         $mform->addElement('submit', 'submitcrontime', get_string('savechanges'));
 
@@ -55,8 +59,17 @@ class general_form extends moodleform {
         $defaulttime = time() - 30*24*60*60;
         $mform->setDefault('startdate',  $defaulttime);
 
-        $mform->addElement('submit', 'exportfile', get_string('export_file', 'local_exportmodsettings'));
+        // Courseid.
+        $attributes = array();
+        $mform->addElement('text', 'courseid', get_string('courseid', 'local_exportmodsettings'), $attributes);
 
+        //Checkbox ifcreatefile
+        $mform->addElement('advcheckbox', 'ifcreatefile', get_string('createfile', 'local_exportmodsettings'), 'Enable/Disable', array('group' => 1), array(0, 1));
+
+        //Checkbox ifquiz
+        $mform->addElement('advcheckbox', 'ifquiz', get_string('quiz', 'local_exportmodsettings'), 'Enable/Disable', array('group' => 1), array(0, 1));
+
+        $mform->addElement('submit', 'exportfile', get_string('export_file', 'local_exportmodsettings'));
 	}
 
     function validation($data, $files) {
@@ -67,6 +80,18 @@ class general_form extends moodleform {
             if($data['startdate'] > $data['enddate']){
                 $errors['enddate'] = get_string('wrong_dates', 'local_exportmodsettings');;
             }
+        }
+
+        //Check input courseid.
+        if(!empty($data['courseid'])){
+            $arr = explode(',', $data['courseid']);
+            foreach($arr as $item){
+                $courseid = trim($item);
+                if((!is_numeric($courseid) || $courseid < 0)){
+                    $errors['courseid'] = get_string('wrong_courseid', 'local_exportmodsettings');
+                }
+            }
+
         }
 
         return $errors;
@@ -81,6 +106,12 @@ class general_form extends moodleform {
         $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodsettings', 'name' => 'crontime'));
         if(!empty($row)){
             $defaultdata['crontime'] = $row->value;
+        }
+
+        //ifquizcron
+        $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodsettings', 'name' => 'ifquizcron'));
+        if(!empty($row)){
+            $defaultdata['ifquizcron'] = $row->value;
         }
 
         //$defaultdata['year'] = date("Y");
@@ -110,12 +141,30 @@ class general_form extends moodleform {
             }
         }
 
+        //Save ifquizcron
+        if(isset($data->submitcrontime)){
+            $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodsettings', 'name' => 'ifquizcron'));
+            if(!empty($row)){
+                $row->value = $data->ifquizcron;
+                $DB->update_record('config_plugins', $row);
+            }else{
+                $obj = new \stdClass();
+                $obj->plugin = 'local_exportmodsettings';
+                $obj->name = 'ifquizcron';
+                $obj->value = $data->ifquizcron;
+                $DB->insert_record('config_plugins', $obj);
+            }
+        }
+
         //Export excel
         if(isset($data->exportfile)){
             $this->ifdownload = true;
         }
 
-        //echo '<pre>';print_r($data);exit;
+        //If create file.
+        if(isset($data->ifcreatefile) && $data->ifcreatefile == 1){
+            $this->ifcreatefile = true;
+        }
     }
 
     public function is_download() {
@@ -124,7 +173,7 @@ class general_form extends moodleform {
 
     public function download() {
         if($this->ifdownload){
-            local_exportmodsettings_download_file($this->postdata);
+            local_exportmodsettings_download_file($this->postdata, $this->ifcreatefile);
         }
     }
 }

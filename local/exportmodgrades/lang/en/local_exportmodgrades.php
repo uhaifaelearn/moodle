@@ -30,6 +30,11 @@ $string['page_index'] = 'Settings and export mod grades';
 $string['export_mod'] = 'Export mod grades';
 $string['cron_grades'] = 'Cron grades';
 $string['export_file'] = 'Export file';
+$string['courseid'] = 'Course id';
+$string['wrong_courseid'] = 'Wrong course id';
+$string['createfile'] = 'Create file';
+$string['quiz'] = 'Quiz';
+
 $string['year'] = 'Year';
 $string['semester'] = 'Semester';
 $string['start_date'] = 'From change date';

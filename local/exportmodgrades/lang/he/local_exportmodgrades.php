@@ -30,6 +30,11 @@ $string['page_index'] = 'Settings and export mod grades';
 $string['export_mod'] = 'Export mod grades';
 $string['cron_grades'] = 'Cron grades';
 $string['export_file'] = 'ייצוא קובץ';
+$string['courseid'] = 'קורס ID';
+$string['wrong_courseid'] = 'קורס ID שגוי';
+$string['createfile'] = 'צור קובץ';
+$string['quiz'] = 'בוחן';
+
 $string['year'] = 'שנה';
 $string['semester'] = 'סמסטר';
 $string['start_date'] = 'מתאריך שינוי';

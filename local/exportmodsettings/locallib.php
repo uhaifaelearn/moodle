@@ -103,8 +103,30 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
     $result = $DB->get_records_sql($sql);
 
     foreach($result as $item){
-        if($item->itemmodule != 'quiz'){
+
+        $quizenable = false;
+
+        //If used in cron
+        if (empty($postdata)) {
+            $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodsettings', 'name' => 'ifquizcron'));
+            if(isset($row->value) && $row->value == 1){
+                $quizenable = true;
+            }
+        }
+
+        //If used in download file
+        if (!empty($postdata) and isset($postdata->exportfile)) {
+            if(isset($postdata->ifquiz) && $postdata->ifquiz == 1){
+                $quizenable = true;
+            }
+        }
+
+        if($quizenable){
             $listmods[] = $item->itemmodule;
+        }else{
+            if($item->itemmodule != 'quiz'){
+                $listmods[] = $item->itemmodule;
+            }
         }
     }
 
@@ -192,6 +214,10 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
                 $select .= " AND c.shortname LIKE('%" . $semester . "%') ";
             }
 
+            if(!empty($postdata->courseid)){
+                $select .= " AND c.id IN(".$postdata->courseid.") ";
+            }
+
         }
 
         $query .= $select;
@@ -235,7 +261,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
     }
 
     foreach($courses as $course){
-        $items = exportmodsettings_build_grade_course($course['courseid']);
+        $items = exportmodsettings_build_grade_course($course['courseid'], $quizenable);
         $yearvalue = $course['yearvalue'];
         $semestrvalue = $course['semestrvalue'];
         $smobjid = $course['smobjid'];
@@ -268,7 +294,8 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             $data[$num]['MOODLE_ID'] = $item->moodle_id;
             $data[$num]['ASSIGN_NAME'] = htmlspecialchars_decode(trim(str_replace(',', ' ', $item->assign_name)));
             $data[$num]['WEIGHT'] = round($item->weight);
-            $data[$num]['OBLIGATORY'] = $item->obligatory;
+	  //  $data[$num]['OBLIGATORY'] = $item->obligatory;
+	    $data[$num]['OBLIGATORY'] = '';
             $data[$num]['PASS_GRADE'] = round($item->pass_grade);
 
             $data[$num]['ASSIGN_REQ'] = ($item->count_children)?$item->count_children:'';
@@ -315,7 +342,7 @@ function local_exportmodsettings_encodeFunc($value) {
     return $value;
 }
 
-function exportmodsettings_recursive($children, $result) {
+function exportmodsettings_recursive($children, $result, $quizenable) {
     global $DB;
 
     $obj = new \StdClass();
@@ -326,6 +353,11 @@ function exportmodsettings_recursive($children, $result) {
     $obj->table = $object->table;
     $obj->itemtype = $object->itemtype;
     $obj->itemmodule = $object->itemmodule;
+
+    // If QUIZ.
+    if($object->itemmodule == 'quiz' && !$quizenable){
+        return $result;
+    }
 
     switch ($children['type']) {
         case 'courseitem':
@@ -373,15 +405,31 @@ function exportmodsettings_recursive($children, $result) {
             else $obj->assign_type = '';
 
             foreach($children['children'] as $child) {
-                $result = exportmodsettings_recursive($child, $result);
+                $result = exportmodsettings_recursive($child, $result, $quizenable);
             }
             break;
 
         default:
 
             //Not quiz
+            //if($object->itemtype == 'mod' && $object->itemmodule == 'quiz'){
+            //    return $result;
+            //}
+
+            // Check if quiz.
             if($object->itemtype == 'mod' && $object->itemmodule == 'quiz'){
-                return $result;
+                $plugs = \core_component::get_plugin_list('local');
+                if(isset($plugs['extendedfields'])){
+                    $row = $DB->get_record('local_extendedfields', array('instanceid' => $object->iteminstance));
+                    if(!empty($row) && $row->status == 1){
+                        return $result;
+                    }
+                }
+            }
+
+            // TODO QUIZ numeration
+            if($object->itemmodule == 'quiz'){
+                $object->iteminstance = $object->iteminstance + 200000;
             }
 
             $obj->moodle_id = $object->iteminstance;
@@ -429,7 +477,7 @@ function exportmodsettings_recursive($children, $result) {
     return $result;
 }
 
-function exportmodsettings_build_grade_course($courseid) {
+function exportmodsettings_build_grade_course($courseid, $quizenable) {
     $result = array();
 
     $gtree = new grade_tree($courseid, false, false);
@@ -437,7 +485,7 @@ function exportmodsettings_build_grade_course($courseid) {
     $childrens = $topelement['children'];
 
     foreach($childrens as $child){
-        $result = exportmodsettings_recursive($child, $result);
+        $result = exportmodsettings_recursive($child, $result, $quizenable);
     }
 
     return $result;
@@ -471,7 +519,7 @@ function local_exportmodsettings_save_file_to_disk($postdata = array()){
     local_exportmodsettings_log_file_success('End save file to disk. Saved to file '.$filename);
 }
 
-function local_exportmodsettings_download_file($postdata){
+function local_exportmodsettings_download_file($postdata, $ifcreatefile){
     global $DB, $CFG;
 
     local_exportmodsettings_save_file_to_disk($postdata);
@@ -484,6 +532,11 @@ function local_exportmodsettings_download_file($postdata){
     header("Content-Disposition: attachment; filename=".$filename);
 
     readfile($pathToFile);
+
+    if(!$ifcreatefile) {
+        unlink($pathToFile);
+    }
+
     exit;
 }
 
