@@ -269,6 +269,15 @@
     // Course wrapper start.
     echo html_writer::start_tag('div', array('class'=>'course-content'));
 
+    /* HAIFA-UNIVERSITY-CUSTOMIZATION message for lecturer about invisible course */
+    if (!$course->visible) {
+        echo html_writer::start_tag('div', ['class' => 'alert alert-danger','style'=>'color:red !important;']);
+        echo get_string('coursehidden').': ';
+        echo html_writer::link(new moodle_url('http://earchive.haifa.ac.il/nsite/mdl_guides/open_course_to_students_mdl.pdf'), get_string('supportpage', 'admin'), ['target' => '_blank']);
+        echo html_writer::end_tag('div');
+    }
+    /* message for lecturer about invisible course */
+
     // make sure that section 0 exists (this function will create one if it is missing)
     course_create_sections_if_missing($course, 0);
 

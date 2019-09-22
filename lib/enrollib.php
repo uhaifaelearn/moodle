@@ -755,16 +755,16 @@ function enrol_get_my_courses($fields = null, $sort = null, $limit = 0, $coursei
     // preload contexts and check visibility
     foreach ($courses as $id=>$course) {
         context_helper::preload_from_record($course);
-        if (!$course->visible) {
-            if (!$context = context_course::instance($id, IGNORE_MISSING)) {
-                unset($courses[$id]);
-                continue;
-            }
-            if (!has_capability('moodle/course:viewhiddencourses', $context)) {
-                unset($courses[$id]);
-                continue;
-            }
-        }
+        //if (!$course->visible) {
+        //    if (!$context = context_course::instance($id, IGNORE_MISSING)) {
+        //        unset($courses[$id]);
+        //        continue;
+        //    }
+        //    if (!has_capability('moodle/course:viewhiddencourses', $context)) {
+        //        unset($courses[$id]);
+        //        continue;
+        //    }
+        //}
         $courses[$id] = $course;
     }
 

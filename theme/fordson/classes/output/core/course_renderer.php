@@ -534,6 +534,16 @@ if ($PAGE->theme->settings->coursetilestyle < 10) {
                             $rowcontent .= '
                                 <div class="col-md-6">
                             	<h4><a href="' . $courseurl . '">' . $trimtitle . '</a></h4>';
+
+                            /* HAIFA-UNIVERSITY-CUSTOMIZATION message for lecturer about invisible course */
+                            if (!$course->visible) {
+                                $rowcontent .= html_writer::start_tag('div', ['class' => 'alert alert-danger','style'=>'color:red !important;']);
+                                $rowcontent .= get_string('coursehidden').': ';
+                                $rowcontent .= html_writer::link(new moodle_url('http://earchive.haifa.ac.il/nsite/mdl_guides/open_course_to_students_mdl.pdf'), get_string('supportpage', 'admin'), ['target' => '_blank']);
+                                $rowcontent .= html_writer::end_tag('div');
+                            }
+                            /* message for lecturer about invisible course */
+
                             if ($systemcontext !== 'page-site-index') {
                             	$rowcontent .= '<div class="course-summary">
 	                                    ' . $summary . '
