@@ -241,7 +241,7 @@ class core_renderer extends \theme_boost\output\core_renderer {
         }
         $context = $menu->export_for_template($this);
 
-        return $this->render_from_template('core/action_menu', $context);
+        return $this->render_from_template('theme_fordson/action_menu', $context);
     }
 
     /**
