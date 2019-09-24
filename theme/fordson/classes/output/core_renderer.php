@@ -35,6 +35,8 @@ use url_select;
 use context_course;
 use pix_icon;
 use theme_config;
+use theme_fordson_setting_menu;
+
 defined('MOODLE_INTERNAL') || die;
 require_once ($CFG->dirroot . "/course/renderer.php");
 
@@ -207,7 +209,8 @@ class core_renderer extends \theme_boost\output\core_renderer {
                 $title = get_string('editon', 'theme_fordson');
                 $icon = 'fa-edit';
             }
-            return html_writer::tag('a', html_writer::start_tag('i', array(
+
+            $output = html_writer::tag('a', html_writer::start_tag('i', array(
                 'class' => $icon . ' fa fa-fw'
             )) . html_writer::end_tag('i') , array(
                 'href' => $url,
@@ -216,9 +219,31 @@ class core_renderer extends \theme_boost\output\core_renderer {
                 'data-placement' => "bottom",
                 'title' => $title,
             ));
+
+            $mainbutton = new theme_fordson_setting_menu();
+            $output .= $this->render_action_menu_settings($mainbutton->get_menu());
+
             return $output;
         }
     }
+
+    public function render_action_menu_settings(action_menu $menu) {
+
+        // We don't want the class icon there!
+        foreach ($menu->get_secondary_actions() as $action) {
+            if ($action instanceof \action_menu_link && $action->has_class('icon')) {
+                $action->attributes['class'] = preg_replace('/(^|\s+)icon(\s+|$)/i', '', $action->attributes['class']);
+            }
+        }
+
+        if ($menu->is_empty()) {
+            return '';
+        }
+        $context = $menu->export_for_template($this);
+
+        return $this->render_from_template('theme_fordson/action_menu', $context);
+    }
+
     /**
      * Generates an array of sections and an array of activities for the given course.
      *
