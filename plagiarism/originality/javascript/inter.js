@@ -27,7 +27,8 @@ require(['jquery', 'jqueryui'], function($) {
                 });
                 return;
             }
-            $('#mform1').submit();
+            //$('#mform1').submit();
+            $(this).closest('form').submit();
             return true;
         });
 

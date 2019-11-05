@@ -78,7 +78,7 @@ $config[$saml2auth->spname] = [
     'certificate' => $saml2auth->spname . '.crt',
     'sign.logout' => true,
     'redirect.sign' => true,
-    'signature.algorithm' => $saml2auth->config->signaturealgorithm,
+    // 'signature.algorithm' => $saml2auth->config->signaturealgorithm,
 ];
 
 /*

@@ -322,7 +322,7 @@ class plagiarism_plugin_originality extends plagiarism_plugin {
         $path = core_component::get_plugin_directory("mod", "originality");
 
         $PAGE->requires->js('/plagiarism/originality/javascript/jquery-3.1.1.min.js');
-        $PAGE->requires->js('/plagiarism/originality/javascript/inter.js?v=24');
+        $PAGE->requires->js('/plagiarism/originality/javascript/inter.js?v=25');
         $str .= format_text(get_string("originalitystudentdisclosure", "plagiarism_originality"), FORMAT_MOODLE, $formatoptions);
 
         // Ben Gurion University requested an additional statement here.
