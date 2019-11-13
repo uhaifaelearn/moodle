@@ -24,8 +24,20 @@ class general_form extends moodleform {
         $select = $mform->addElement('select', 'crontime', get_string('crontime', 'local_exportmodgrades'), GRADESCRONPERIODSSELECT, $attributes);
         $select->setMultiple(false);
 
+        //Input filename
+        $attributes = array();
+        $mform->addElement('text', 'filename', get_string('filename', 'local_exportmodgrades'), $attributes);
+        $mform->setDefault('filename',  date("Y"));
+
         //Checkbox ifquiz
-        $mform->addElement('advcheckbox', 'ifquizcron', get_string('quiz', 'local_exportmodgrades'), 'Enable/Disable', array('group' => 1), array(0, 1));
+        $mform->addElement('advcheckbox', 'ifquizcron', get_string('quiz', 'local_exportmodgrades'),
+                get_string('enable_disable', 'local_exportmodgrades'), array('group' => 1), array(0, 1));
+        $mform->setDefault('ifquizcron',  1);
+
+        //Checkbox ifexportsapcron
+        $mform->addElement('advcheckbox', 'ifexportsapcron', get_string('export_sap', 'local_exportmodgrades'),
+                get_string('enable_disable', 'local_exportmodgrades'), array('group' => 1), array(0, 1));
+        $mform->setDefault('ifexportsapcron',  0);
 
         $mform->addElement('submit', 'submitcrontime', get_string('savechanges'));
 
@@ -64,10 +76,20 @@ class general_form extends moodleform {
         $mform->addElement('text', 'courseid', get_string('courseid', 'local_exportmodgrades'), $attributes);
 
         //Checkbox ifcreatefile
-        $mform->addElement('advcheckbox', 'ifcreatefile', get_string('createfile', 'local_exportmodgrades'), 'Enable/Disable', array('group' => 1), array(0, 1));
+        $mform->addElement('advcheckbox', 'ifcreatefile', get_string('createfile', 'local_exportmodgrades'),
+                get_string('enable_disable', 'local_exportmodgrades'), array('group' => 1), array(0, 1));
+        $mform->setDefault('ifcreatefile',  0);
 
         //Checkbox ifquiz
-        $mform->addElement('advcheckbox', 'ifquiz', get_string('quiz', 'local_exportmodgrades'), 'Enable/Disable', array('group' => 1), array(0, 1));
+        $mform->addElement('advcheckbox', 'ifquiz', get_string('quiz', 'local_exportmodgrades'),
+                get_string('enable_disable', 'local_exportmodgrades'), array('group' => 1), array(0, 1));
+        $mform->setDefault('ifquiz',  1);
+
+        //Checkbox ifexportsap
+        $mform->addElement('advcheckbox', 'ifexportsap', get_string('export_sap', 'local_exportmodgrades'),
+                get_string('enable_disable', 'local_exportmodgrades'), array('group' => 1), array(0, 1));
+        $mform->setDefault('ifexportsap',  1);
+
 
         $mform->addElement('submit', 'exportfile', get_string('export_file', 'local_exportmodgrades'));
 
@@ -115,6 +137,18 @@ class general_form extends moodleform {
             $defaultdata['ifquizcron'] = $row->value;
         }
 
+        //ifexportsapcron
+        $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'ifexportsapcron'));
+        if(!empty($row)){
+            $defaultdata['ifexportsapcron'] = $row->value;
+        }
+
+        //filename
+        $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'filename'));
+        if(!empty($row)){
+            $defaultdata['filename'] = $row->value;
+        }
+
         //$defaultdata['year'] = date("Y");
         $defaultdata['year'] = 0;
 
@@ -153,6 +187,36 @@ class general_form extends moodleform {
                 $obj->plugin = 'local_exportmodgrades';
                 $obj->name = 'ifquizcron';
                 $obj->value = $data->ifquizcron;
+                $DB->insert_record('config_plugins', $obj);
+            }
+        }
+
+        //Save ifexportsapcron
+        if(isset($data->submitcrontime)){
+            $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'ifexportsapcron'));
+            if(!empty($row)){
+                $row->value = $data->ifexportsapcron;
+                $DB->update_record('config_plugins', $row);
+            }else{
+                $obj = new \stdClass();
+                $obj->plugin = 'local_exportmodgrades';
+                $obj->name = 'ifexportsapcron';
+                $obj->value = $data->ifexportsapcron;
+                $DB->insert_record('config_plugins', $obj);
+            }
+        }
+
+        //Save filenamecron
+        if(isset($data->filename)){
+            $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'filename'));
+            if(!empty($row)){
+                $row->value = $data->filename;
+                $DB->update_record('config_plugins', $row);
+            }else{
+                $obj = new \stdClass();
+                $obj->plugin = 'local_exportmodgrades';
+                $obj->name = 'filename';
+                $obj->value = $data->filename;
                 $DB->insert_record('config_plugins', $obj);
             }
         }

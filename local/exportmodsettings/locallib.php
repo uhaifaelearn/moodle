@@ -105,6 +105,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
     foreach($result as $item){
 
         $quizenable = false;
+        $exportsapenable = false;
 
         //If used in cron
         if (empty($postdata)) {
@@ -112,12 +113,21 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             if(isset($row->value) && $row->value == 1){
                 $quizenable = true;
             }
+
+            $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodsettings', 'name' => 'ifexportsapcron'));
+            if(isset($row->value) && $row->value == 1){
+                $exportsapenable = true;
+            }
         }
 
         //If used in download file
         if (!empty($postdata) and isset($postdata->exportfile)) {
             if(isset($postdata->ifquiz) && $postdata->ifquiz == 1){
                 $quizenable = true;
+            }
+
+            if(isset($postdata->ifexportsap) && $postdata->ifexportsap == 1){
+                $exportsapenable = true;
             }
         }
 
@@ -144,6 +154,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             gc.aggregateonlygraded AS aggregateonlygraded,
             gc.keephigh AS keephigh,
             gc.droplow AS droplow,
+            gi.ifexportsap AS ifexportsap,
             
             (CASE 
                 WHEN gi.itemtype='category' THEN gi.iteminstance+90000
@@ -188,7 +199,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             if ($periodago != 0) {
                 $attributes = array(time() - $periodago);
                 $select = " WHERE (gi.itemmodule='".$mod."' OR (gi.itemmodule IS NULL AND gi.itemtype!='course') OR gi.itemtype='category') 
-                    AND IF(a.timemodified IS NOT NULL, GREATEST(a.timemodified, gi.timemodified), gi.timemodified ) > ?  ";
+                    AND gi.ifexportsap=1 AND IF(a.timemodified IS NOT NULL, GREATEST(a.timemodified, gi.timemodified), gi.timemodified ) > ?  ";
             } else {
                 $attributes = array();
                 $select = " WHERE (gi.itemmodule='".$mod."' OR (gi.itemmodule IS NULL AND gi.itemtype!='course') OR gi.itemtype='category') ";
@@ -197,6 +208,10 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
 
         //If used in download file
         if (!empty($postdata) and isset($postdata->exportfile)) {
+
+            // Change enddate.
+            $postdata->enddate = $postdata->enddate + 24*60*60;
+
             $attributes = array($postdata->startdate, $postdata->enddate);
 
             $select = " 
@@ -217,7 +232,6 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             if(!empty($postdata->courseid)){
                 $select .= " AND c.id IN(".$postdata->courseid.") ";
             }
-
         }
 
         $query .= $select;
@@ -261,7 +275,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
     }
 
     foreach($courses as $course){
-        $items = exportmodsettings_build_grade_course($course['courseid'], $quizenable);
+        $items = exportmodsettings_build_grade_course($course['courseid'], $quizenable, $exportsapenable);
         $yearvalue = $course['yearvalue'];
         $semestrvalue = $course['semestrvalue'];
         $smobjid = $course['smobjid'];
@@ -293,13 +307,13 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
 
             $data[$num]['MOODLE_ID'] = $item->moodle_id;
             $data[$num]['ASSIGN_NAME'] = htmlspecialchars_decode(trim(str_replace(',', ' ', $item->assign_name)));
-            $data[$num]['WEIGHT'] = round($item->weight);
-	  //  $data[$num]['OBLIGATORY'] = $item->obligatory;
-	    $data[$num]['OBLIGATORY'] = '';
+            $data[$num]['WEIGHT'] = round($item->weight*100);
+	    //  $data[$num]['OBLIGATORY'] = $item->obligatory;
+	        $data[$num]['OBLIGATORY'] = '';
             $data[$num]['PASS_GRADE'] = round($item->pass_grade);
 
-            $data[$num]['ASSIGN_REQ'] = ($item->count_children)?$item->count_children:'';
-            $data[$num]['ASSIGN_FOR_AVG'] = ($item->count_children)?$item->count_children:'';
+            $data[$num]['ASSIGN_REQ'] = ($item->assign_req)?$item->assign_req:'';
+            $data[$num]['ASSIGN_FOR_AVG'] = ($item->assign_for_avg)?$item->assign_for_avg:'';
             $data[$num]['PARENT_ASSIGN'] = $item->categoryid;
             $data[$num]['SUPPORTIVE_GRADE'] = '';
             $data[$num]['ASSIGN_TYPE'] = $item->assign_type;
@@ -313,6 +327,8 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             $num++;
         }
     }
+
+    $data = local_exportmodsettings_duplicate_tat_courses($course['courseid'], $data);
 
     $time_elapsed_secs = microtime(true) - $start;
     local_exportmodsettings_log_file_success('Process took  '.$time_elapsed_secs.' sec');
@@ -333,6 +349,41 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
     return $output;
 }
 
+function local_exportmodsettings_duplicate_tat_courses($courseid, $data) {
+    global $DB;
+
+    // Get tat courses.
+    $sql = "
+        SELECT 
+            e.id AS enrolid, 
+            e.customint1 AS courseid,
+            c.idnumber AS idnumber
+        FROM {enrol} AS e
+        LEFT JOIN {course} AS c ON (c.id=e.customint1)
+        WHERE enrol='meta' AND `courseid` = ?    
+    ";
+    $tatcourses = $DB->get_records_sql($sql, array($courseid));
+
+    $datatmp = $data;
+    foreach($tatcourses as $tatcourse){
+        $arridnumber = explode('-', $tatcourse->idnumber);
+        $smobjid = (isset($arridnumber[1])) ? $arridnumber[1] : '';
+        $eobjid = (isset($arridnumber[0])) ? $arridnumber[0] : '';
+
+        if(empty($smobjid) || !is_numeric($smobjid)) continue;
+        if(empty($eobjid) || !is_numeric($eobjid)) continue;
+
+        foreach($datatmp as $key => $item){
+            $datatmp[$key]['SM_OBJID'] = $smobjid;
+            $datatmp[$key]['E_OBJID'] = $eobjid;
+        }
+
+        $data = array_merge($data, $datatmp);
+    }
+
+    return $data;
+}
+
 function local_exportmodsettings_encodeFunc($value) {
     // remove any ESCAPED double quotes within string.
     $value = str_replace('\\"','"',$value);
@@ -342,7 +393,7 @@ function local_exportmodsettings_encodeFunc($value) {
     return $value;
 }
 
-function exportmodsettings_recursive($children, $result, $quizenable) {
+function exportmodsettings_recursive($children, $result, $quizenable, $exportsapenable) {
     global $DB;
 
     $obj = new \StdClass();
@@ -353,6 +404,18 @@ function exportmodsettings_recursive($children, $result, $quizenable) {
     $obj->table = $object->table;
     $obj->itemtype = $object->itemtype;
     $obj->itemmodule = $object->itemmodule;
+
+    // Export to SAP items manual
+    $gi = $DB->get_record('grade_items', array('id' => $object->id));
+    if($exportsapenable){
+        if ($object->itemtype == 'manual' && $gi->ifexportsap != 1){
+            return $result;
+        }
+    }else{
+        if ($object->itemtype == 'manual'){
+            return $result;
+        }
+    }
 
     // If QUIZ.
     if($object->itemmodule == 'quiz' && !$quizenable){
@@ -371,7 +434,6 @@ function exportmodsettings_recursive($children, $result, $quizenable) {
 
         case 'category':
             $first_item = reset($children['children']);
-
             $obj->moodle_id = $object->id + 90000;
             $obj->weight = $first_item['object']->aggregationcoef;
             $obj->pass_grade = $first_item['object']->gradepass;
@@ -381,19 +443,42 @@ function exportmodsettings_recursive($children, $result, $quizenable) {
 
             // Set default.
             $obj->count_children = 0;
-            if($first_item['object']->aggregateonlygraded == 1) {
-                if ($first_item['object']->keephigh != 0) {
-                    $obj->count_children = $first_item['object']->keephigh;
+            $obj->assign_req = 0;
+            $obj->assign_for_avg = 0;
+
+            if($children['object']->aggregateonlygraded == 1 && in_array($children['object']->aggregation, array(11))) {
+                if ($children['object']->keephigh > 0) {
+
+                    $counts = count($children['children']) - 1;
+                    $obj->count_children = $counts;
+                    $obj->assign_req = $counts;
+                    $obj->assign_for_avg = $children['object']->keephigh;
                 }
 
-                if ($first_item['object']->droplow != 0) {
-                    if (isset($children['children']) && count($children['children']) != 0) {
-                        $obj->count_children = count($children['children']) - 1 - $first_item['object']->droplow;
+                if ($children['object']->droplow > 0) {
+
+                    $counts = count($children['children']) - 1;
+                    if (isset($children['children']) && count($children['children']) > 0) {
+                        $obj->count_children = $counts;
+                        $obj->assign_req = $counts;
+                        $obj->assign_for_avg = $counts - $children['object']->droplow;
                     }
+                }
+
+                if ($children['object']->keephigh == 0 && $children['object']->droplow == 0) {
+
+                    $counts = count($children['children']) - 1;
+                    $obj->count_children = $counts;
+                    $obj->assign_req = $counts;
+                    $obj->assign_for_avg = $counts;
                 }
             }else {
                 if (isset($children['children']) && count($children['children']) != 0) {
-                    $obj->count_children = count($children['children']) - 1;
+
+                    $counts = count($children['children']) - 1;
+                    $obj->count_children = $counts;
+                    $obj->assign_req = 0;
+                    $obj->assign_for_avg = 0;
                 }
             }
 
@@ -405,7 +490,7 @@ function exportmodsettings_recursive($children, $result, $quizenable) {
             else $obj->assign_type = '';
 
             foreach($children['children'] as $child) {
-                $result = exportmodsettings_recursive($child, $result, $quizenable);
+                $result = exportmodsettings_recursive($child, $result, $quizenable, $exportsapenable);
             }
             break;
 
@@ -436,6 +521,8 @@ function exportmodsettings_recursive($children, $result, $quizenable) {
             $obj->weight = $object->aggregationcoef;
             $obj->pass_grade = $object->gradepass;
             $obj->count_children = 0;
+            $obj->assign_req = 0;
+            $obj->assign_for_avg = 0;
             $obj->assign_name = $object->itemname;
             $obj->obligatory = ($object->hidden == 0)?'X':'';
 
@@ -477,7 +564,7 @@ function exportmodsettings_recursive($children, $result, $quizenable) {
     return $result;
 }
 
-function exportmodsettings_build_grade_course($courseid, $quizenable) {
+function exportmodsettings_build_grade_course($courseid, $quizenable, $exportsapenable) {
     $result = array();
 
     $gtree = new grade_tree($courseid, false, false);
@@ -485,7 +572,7 @@ function exportmodsettings_build_grade_course($courseid, $quizenable) {
     $childrens = $topelement['children'];
 
     foreach($childrens as $child){
-        $result = exportmodsettings_recursive($child, $result, $quizenable);
+        $result = exportmodsettings_recursive($child, $result, $quizenable, $exportsapenable);
     }
 
     return $result;
@@ -496,8 +583,11 @@ function local_exportmodsettings_save_file_to_disk($postdata = array()){
 
     local_exportmodsettings_log_file_success('Start save file to disk');
 
+    $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodsettings', 'name' => 'filename'));
+    $addname = !empty($row)?$row->value:date("Y");
+
     $folderPath = $CFG->dataroot.'/sap';
-    $filename = 'MoodleAssg-'.date("Ymd").'.csv';
+    $filename = 'MoodleAssg-'.date("Ymd").$addname.'.csv';
     $pathToFile = $folderPath.'/'.$filename;
 
     //Create folder if not exists
@@ -524,8 +614,11 @@ function local_exportmodsettings_download_file($postdata, $ifcreatefile){
 
     local_exportmodsettings_save_file_to_disk($postdata);
 
+    $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodsettings', 'name' => 'filename'));
+    $addname = !empty($row)?$row->value:date("Y");
+
     $folderPath = $CFG->dataroot.'/sap';
-    $filename = 'MoodleAssg-'.date("Ymd").'.csv';
+    $filename = 'MoodleAssg-'.date("Ymd").$addname.'.csv';
     $pathToFile = $folderPath.'/'.$filename;
 
     header("Content-type: application/csv");

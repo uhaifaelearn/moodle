@@ -185,6 +185,14 @@ if ($mform->is_cancelled()) {
         }
     }
 
+    // Save ifexportsap.
+    $row = $DB->get_record('grade_items', array('id' => $grade_item->id));
+    if(!empty($row)){
+        $row->ifexportsap = $data->ifexportsap;
+        $sql = "UPDATE {grade_items} SET ifexportsap = ? WHERE id = ?";
+        $DB->execute($sql, array($data->ifexportsap, $grade_item->id));
+    }
+
     // update hiding flag
     if ($hiddenuntil) {
         $grade_item->set_hidden($hiddenuntil, false);

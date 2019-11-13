@@ -43,6 +43,17 @@ class edit_item_form extends moodleform {
 
         $mform->addElement('text', 'itemname', get_string('itemname', 'grades'));
         $mform->setType('itemname', PARAM_TEXT);
+
+        //Export to Sap
+        $mform->addElement('advcheckbox', 'ifexportsap', get_string('export_sap', 'grades'), ' ', array('group' => 1), array(0, 1));
+
+        $sql = "SELECT * FROM {grade_items} WHERE id = ?";
+        $row = $DB->get_record_sql($sql, array($item->id));
+
+        if(!empty($row)){
+            $mform->setDefault('ifexportsap', $row->ifexportsap);
+        }
+
         $mform->addElement('text', 'iteminfo', get_string('iteminfo', 'grades'));
         $mform->addHelpButton('iteminfo', 'iteminfo', 'grades');
         $mform->setType('iteminfo', PARAM_TEXT);

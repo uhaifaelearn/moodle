@@ -32,8 +32,11 @@ $string['cron_grades'] = 'Cron grades';
 $string['export_file'] = 'ייצוא קובץ';
 $string['courseid'] = 'קורס ID';
 $string['wrong_courseid'] = 'קורס ID שגוי';
-$string['createfile'] = 'צור קובץ';
+$string['createfile'] = 'האם לייצא למינה?';
 $string['quiz'] = 'בוחן';
+$string['export_sap'] = 'האם להתייחס להגדרות של המורה?';
+$string['enable_disable'] = 'הפעל / השבת';
+$string['filename'] = 'שנה הנוכחי';
 
 $string['year'] = 'שנה';
 $string['semester'] = 'סמסטר';

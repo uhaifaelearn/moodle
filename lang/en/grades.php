@@ -864,4 +864,4 @@ $string['writinggradebookinfo'] = 'Writing gradebook settings';
 $string['xml'] = 'XML';
 $string['yes'] = 'Yes';
 $string['yourgrade'] = 'Your grade';
-
+$string['export_sap'] = 'יצוא למינה';

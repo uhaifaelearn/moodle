@@ -34,6 +34,9 @@ $string['courseid'] = 'Course id';
 $string['wrong_courseid'] = 'Wrong course id';
 $string['createfile'] = 'Create file';
 $string['quiz'] = 'Quiz';
+$string['export_sap'] = "Do refer to the teacher's definitions?";
+$string['enable_disable'] = 'Enable/Disable';
+$string['filename'] = 'Present year';
 
 $string['year'] = 'Year';
 $string['semester'] = 'Semester';

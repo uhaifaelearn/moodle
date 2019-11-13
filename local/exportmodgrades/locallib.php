@@ -63,6 +63,262 @@ define("GRADESTYPEASSIGN", array(
 
 define("GRADESCATEGORYOFFSET", 90000);
 
+function local_exportmodgrades_query_with_grade($postdata){
+    global $DB;
+
+    $query ="
+        SELECT 
+            gg.id,
+            gi.id AS giid,
+            gg.userid AS userid,
+            c.id AS course_id,
+            c.shortname AS course_name,
+            c.idnumber AS course_idnumber,
+            gi.iteminstance AS iteminstance,
+            gi.itemtype AS itemtype,
+            gi.itemmodule AS itemmodule,            
+            u.idnumber AS student12,
+                        
+            CASE WHEN gg.finalgrade IS NULL THEN 0 ELSE gg.finalgrade END AS grade,
+                        
+            gg.timecreated AS timecreated,                
+            gg.timemodified AS last_updated,
+            gg.feedback AS feedback,
+            gi.gradepass AS gradepass,
+            
+            gi.gradetype AS gradetype,               
+            gi.scaleid AS scaleid,               
+            gi.ifexportsap AS ifexportsap               
+        
+        FROM {grade_grades} AS gg
+	    LEFT JOIN {grade_items} AS gi ON (gg.itemid = gi.id)
+	    LEFT JOIN {course} AS c ON (c.id = gi.courseid)
+	    LEFT JOIN {user} AS u ON (u.id = gg.userid)
+	    LEFT JOIN {grade_categories} AS gc ON (gc.id = gi.categoryid)
+    ";
+
+    //$select = " WHERE (gg.finalgrade IS NOT NULL OR (gi.itemtype = 'category')) AND gi.itemtype != 'course' AND gi.hidden = 0 ";
+    $select = " WHERE (gg.finalgrade IS NOT NULL OR (gi.itemtype = 'category')) AND gi.itemtype != 'course' ";
+
+    //If used in cron
+    if(empty($postdata)){
+        $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'crontime'));
+        $periodago = GRADESCRONPERIODS[$row->value];
+
+        if($periodago != 0) {
+            $attributes = array(time() - $periodago);
+            $select .= " AND gg.timemodified > ? ";
+        }
+
+        $row2 = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'ifexportsapcron'));
+        if($row2->value){
+            $select .= " AND gi.ifexportsap = 1 ";
+        }
+    }
+
+    //If used in download file
+    if(!empty($postdata) and isset($postdata->exportfile)){
+
+        // Change enddate.
+        $postdata->enddate = $postdata->enddate + 24*60*60;
+
+        $attributes = array($postdata->startdate, $postdata->enddate);
+        $select .= " AND gg.timemodified BETWEEN ? AND ? ";
+
+        if($postdata->year != 0){
+            $year = '-' . $postdata->year;
+            $select .= " AND c.shortname LIKE('%" . $year . "%') ";
+        }
+
+        if($postdata->semester != '0'){
+            $semester = '-' . $postdata->semester;
+            $select .= " AND c.shortname LIKE('%" . $semester . "%') ";
+        }
+
+        if(!empty($postdata->courseid)){
+            $select .= " AND c.id IN(".$postdata->courseid.") ";
+        }
+
+    }
+
+    $query .= $select;
+
+    return $DB->get_records_sql($query, $attributes);
+}
+
+function local_exportmodgrades_query_with_grade_empty($postdata){
+    global $DB;
+
+    $query ="
+        SELECT 
+            gg.id,
+            gi.id AS giid,
+            gg.userid AS userid,
+            c.id AS course_id,
+            c.shortname AS course_name,
+            c.idnumber AS course_idnumber,
+            gi.iteminstance AS iteminstance,
+            gi.itemtype AS itemtype,
+            gi.itemmodule AS itemmodule,            
+            u.idnumber AS student12,
+                        
+            CASE WHEN gg.finalgrade IS NULL THEN 0 ELSE gg.finalgrade END AS grade,
+                        
+            '' AS timecreated,                
+            UNIX_TIMESTAMP() AS last_updated,
+            gg.feedback AS feedback,
+            gi.gradepass AS gradepass,
+            
+            gi.gradetype AS gradetype,               
+            gi.scaleid AS scaleid,               
+            gi.ifexportsap AS ifexportsap               
+        
+        FROM {grade_grades} AS gg
+	    LEFT JOIN {grade_items} AS gi ON (gg.itemid = gi.id)
+	    LEFT JOIN {course} AS c ON (c.id = gi.courseid)
+	    LEFT JOIN {user} AS u ON (u.id = gg.userid)
+	    LEFT JOIN {grade_categories} AS gc ON (gc.id = gi.categoryid)
+    ";
+
+    //$select = " WHERE (gg.finalgrade IS NULL AND gc.aggregateonlygraded = 0) AND gi.itemtype != 'course' AND gi.hidden = 0 ";
+    $select = " WHERE (gg.finalgrade IS NULL AND gc.aggregateonlygraded = 0) AND gi.itemtype != 'course' ";
+
+    //If used in cron
+    if(empty($postdata)){
+
+        $row2 = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'ifexportsapcron'));
+        if($row2->value){
+            $select .= " AND gi.ifexportsap = 1 ";
+        }
+    }
+
+    //If used in download file
+    if(!empty($postdata) and isset($postdata->exportfile)){
+
+        $attributes = array();
+
+        if($postdata->year != 0){
+            $year = '-' . $postdata->year;
+            $select .= " AND c.shortname LIKE('%" . $year . "%') ";
+        }
+
+        if($postdata->semester != '0'){
+            $semester = '-' . $postdata->semester;
+            $select .= " AND c.shortname LIKE('%" . $semester . "%') ";
+        }
+
+        if(!empty($postdata->courseid)){
+            $select .= " AND c.id IN(".$postdata->courseid.") ";
+        }
+
+    }
+
+    $query .= $select;
+
+    return $DB->get_records_sql($query, $attributes);
+}
+
+function local_exportmodgrades_query_without_grade($courseid, $postdata){
+    global $DB;
+
+    $context = context_course::instance($courseid);
+    $students = get_role_users(5 , $context);
+    $arr = array();
+
+    foreach($students as $item){
+        $arr[] = $item->id;
+    }
+
+    if(empty($arr)) return array();
+
+    $listusers = implode(',', $arr);
+
+    $query = "
+        SELECT  
+        CONCAT(gi.giid,gi.userid) AS id,         
+        gi.giid AS giid,
+        gg.userid AS userid,
+        c.id AS course_id,
+        c.shortname AS course_name,
+        c.idnumber AS course_idnumber,
+        gi.iteminstance AS iteminstance,
+        gi.itemmodule AS itemmodule,
+        gi.itemtype AS itemtype,
+        gi.student12 AS student12,
+        gi.grade AS grade,
+        '' AS timecreated,
+        UNIX_TIMESTAMP() AS last_updated,
+        '' AS feedback,
+        gi.gradepass AS gradepass,
+        gi.gradetype AS gradetype,
+        gi.scaleid AS scaleid,
+        gi.ifexportsap AS ifexportsap
+        
+        FROM (
+            SELECT
+                gi.id AS giid,
+                u.id AS userid,	
+                gi.courseid AS courseid,
+                gi.categoryid AS categoryid,
+                gi.iteminstance AS iteminstance,
+                gi.itemtype AS itemtype,
+                gi.itemmodule AS itemmodule,
+                gi.gradepass AS gradepass,
+                gi.gradetype AS gradetype,
+                gi.scaleid AS scaleid,
+                gi.ifexportsap AS ifexportsap,
+                u.idnumber AS student12,
+                0 AS finalgrade,
+                0 AS grade
+                
+            FROM {grade_items} AS gi, {user} AS u
+        
+            WHERE gi.itemtype != 'course' AND gi.hidden = 0 AND u.id IN(".$listusers.")
+        ) AS gi
+        
+        LEFT JOIN {course} AS c ON (c.id = gi.courseid)
+        LEFT JOIN {grade_grades} AS gg ON (gg.itemid = gi.giid AND gg.userid = gi.userid)
+        LEFT JOIN {grade_categories} AS gc ON (gc.id = gi.categoryid)
+        
+        WHERE gg.id IS NULL AND gc.aggregateonlygraded = 0 
+       
+    ";
+
+    //If used in cron
+    if(empty($postdata)){
+        $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'ifexportsapcron'));
+        if($row->value){
+            $select = " AND gi.ifexportsap = 1 ";
+        }
+    }
+
+    //If used in download file
+    if(!empty($postdata) and isset($postdata->exportfile)){
+
+        $attributes = array();
+        $select = "";
+
+        if($postdata->year != 0){
+            $year = '-' . $postdata->year;
+            $select .= " AND c.shortname LIKE('%" . $year . "%') ";
+        }
+
+        if($postdata->semester != '0'){
+            $semester = '-' . $postdata->semester;
+            $select .= " AND c.shortname LIKE('%" . $semester . "%') ";
+        }
+
+        if(!empty($postdata->courseid)){
+            $select .= " AND c.id IN(".$postdata->courseid.") ";
+        }
+
+    }
+
+    $query .= $select;
+
+    return $DB->get_records_sql($query, $attributes);
+}
+
 function local_exportmodgrades_generate_output_csv($output, $postdata = array()){
     global $DB;
 
@@ -87,68 +343,18 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
     //Start test time execute
     $start = microtime(true);
 
-    $query ="
-        SELECT 
-            gg.id,
-            gi.id AS giid,
-            c.id AS course_id,
-            c.shortname AS course_name,
-            c.idnumber AS course_idnumber,
-            gi.iteminstance AS iteminstance,
-            gi.itemtype AS itemtype,
-            gi.itemmodule AS itemmodule,            
-            u.idnumber AS student12,
-            gg.finalgrade AS grade,
-            gg.timecreated AS timecreated,                
-            gg.timemodified AS last_updated ,
-            
-            gi.gradetype AS gradetype,               
-            gi.scaleid AS scaleid               
-        
-        FROM {grade_grades} AS gg
-	    LEFT JOIN {grade_items} AS gi ON (gg.itemid = gi.id)
-	    LEFT JOIN {course} AS c ON (c.id = gi.courseid)
-	    LEFT JOIN {user} AS u ON (u.id = gg.userid)
-    ";
+    $result = local_exportmodgrades_query_with_grade($postdata);
+    $result = array_merge($result, local_exportmodgrades_query_with_grade_empty($postdata));
 
-    //If used in cron
-    if(empty($postdata)){
-        $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'crontime'));
-        $periodago = GRADESCRONPERIODS[$row->value];
-
-        $select = " WHERE gg.finalgrade IS NOT NULL AND gi.itemtype != 'course' AND gi.hidden = 0 ";
-
-        if($periodago != 0) {
-            $attributes = array(time() - $periodago);
-            $select .= " AND gg.timemodified > ? ";
-        }
+    $courses = array();
+    foreach($result as $item){
+        $courses[] = $item->course_id;
     }
+    $courses = array_unique($courses);
 
-    //If used in download file
-    if(!empty($postdata) and isset($postdata->exportfile)){
-        $attributes = array($postdata->startdate, $postdata->enddate);
-        $select = "        
-            WHERE gg.finalgrade IS NOT NULL AND gi.itemtype != 'course' AND gi.hidden = 0 AND gg.timemodified BETWEEN ? AND ?
-        ";
-
-        if($postdata->year != 0){
-            $year = '-' . $postdata->year;
-            $select .= " AND c.shortname LIKE('%" . $year . "%') ";
-        }
-
-        if($postdata->semester != '0'){
-            $semester = '-' . $postdata->semester;
-            $select .= " AND c.shortname LIKE('%" . $semester . "%') ";
-        }
-
-        if(!empty($postdata->courseid)){
-            $select .= " AND c.id IN(".$postdata->courseid.") ";
-        }
+    foreach($courses as $courseid){
+        $result = array_merge($result, local_exportmodgrades_query_without_grade($courseid, $postdata));
     }
-
-    $query .= $select;
-
-    $result = $DB->get_records_sql($query, $attributes);
 
     foreach ($result as $item) {
 
@@ -184,6 +390,17 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
             }
         }
 
+        // Export to SAP items manual
+        if($postdata->ifexportsap) {
+            if ($item->itemtype == 'manual' && $item->ifexportsap != 1){
+                continue;
+            }
+        }else{
+            if ($item->itemtype == 'manual'){
+                continue;
+            }
+        }
+
         //Prepare YEAR and SEMESTER
         $arrname = explode('-', $item->course_name);
         $yearvalue = (isset($arrname[3])) ? $arrname[3] - 1 : '';
@@ -200,7 +417,13 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         }
 
         // Prepare SM_OBJID and E_OBJID
-        $arridnumber = explode('-', $item->course_idnumber);
+        $tatname = local_exportmodgrades_return_tat_course_name($item->course_id, $item->userid);
+        if(!empty($tatname)){
+            $arridnumber = explode('-', $tatname);
+        }else{
+            $arridnumber = explode('-', $item->course_idnumber);
+        }
+
         $smobjid = (isset($arridnumber[1])) ? $arridnumber[1] : '';
         $eobjid = (isset($arridnumber[0])) ? $arridnumber[0] : '';
 
@@ -237,8 +460,9 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         $data[$num]['MOODLE_ID'] = $moodleid;
         $data[$num]['Student12'] = str_pad($item->student12, 12, '0', STR_PAD_LEFT);
 
-        // Calculate PASSED T/F.
         $passed = '';
+
+        // Calculate PASSED T/F  For special settings.
         if($item->gradetype == 2 && $item->scaleid == 3){
             if(!empty($item->grade) && round($item->grade) == 1){
                 $passed = 'F';
@@ -249,7 +473,20 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
                 $passed = 'P';
                 $item->grade = '';
             }
+
+            // For assign.
+            if($item->itemmodule == 'assign'){
+                $item->grade = $item->feedback;
+            }
         }
+
+        // Calculate PASSED T/F for quiz.
+        //if($item->itemmodule == 'quiz'){
+        //    if(!empty($item->gradepass)){
+        //        if($item->grade >= $item->gradepass) $passed = 'P';
+        //        if($item->grade < $item->gradepass) $passed = 'F';
+        //    }
+        //}
 
         $data[$num]['Grade'] = (empty($item->grade))?$item->grade:round($item->grade);
 
@@ -321,13 +558,54 @@ function local_exportmodgrades_encodeFunc($value) {
     return $value;
 }
 
+function local_exportmodgrades_return_tat_course_name($courseid, $userid) {
+    global $DB;
+
+    // Get tat courses.
+    $sql = "
+        SELECT 
+            e.id AS enrolid, 
+            e.customint1 AS courseid,
+            c.idnumber AS idnumber
+        FROM {enrol} AS e
+        LEFT JOIN {course} AS c ON (c.id=e.customint1)
+        WHERE enrol='meta' AND `courseid` = ?    
+    ";
+    $tatcourses = $DB->get_records_sql($sql, array($courseid));
+
+    foreach($tatcourses as $tatcourse){
+        $sql = "
+            SELECT *
+            FROM {enrol}
+            WHERE enrol='manual' AND `courseid` = ?
+        ";
+        $enrol = $DB->get_record_sql($sql, array($tatcourse->courseid));
+
+        $sql = "
+            SELECT *
+            FROM {user_enrolments}
+            WHERE enrolid = ? AND userid = ?
+        ";
+        $obj = $DB->get_records_sql($sql, array($enrol->id, $userid));
+
+        if(!empty($obj)){
+            return $tatcourse->idnumber;
+        }
+    }
+
+    return '';
+}
+
 function local_exportmodgrades_save_file_to_disk($postdata = array()){
     global $DB, $CFG;
 
     local_exportmodgrades_log_file_success('Start save file to disk');
 
+    $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'filename'));
+    $addname = !empty($row)?$row->value:date("Y");
+
     $folderPath = $CFG->dataroot.'/sap_grades';
-    $filename = 'MoodleGrades-'.date("Ymd").'.csv';
+    $filename = 'MoodleGrades-'.date("Ymd").$addname.'.csv';
     $pathToFile = $folderPath.'/'.$filename;
 
     //Create folder if not exists
@@ -354,8 +632,11 @@ function local_exportmodgrades_download_file($postdata, $ifcreatefile){
 
     local_exportmodgrades_save_file_to_disk($postdata);
 
+    $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'filename'));
+    $addname = !empty($row)?$row->value:date("Y");
+
     $folderPath = $CFG->dataroot.'/sap_grades';
-    $filename = 'MoodleGrades-'.date("Ymd").'.csv';
+    $filename = 'MoodleGrades-'.date("Ymd").$addname.'.csv';
     $pathToFile = $folderPath.'/'.$filename;
 
     header("Content-type: application/csv");
