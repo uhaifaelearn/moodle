@@ -109,11 +109,6 @@ function local_exportmodgrades_query_with_grade($postdata){
             $attributes = array(time() - $periodago);
             $select .= " AND gg.timemodified > ? ";
         }
-
-        $row2 = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'ifexportsapcron'));
-        if($row2->value){
-            $select .= " AND gi.ifexportsap = 1 ";
-        }
     }
 
     //If used in download file
@@ -182,15 +177,6 @@ function local_exportmodgrades_query_with_grade_empty($postdata){
 
     //$select = " WHERE (gg.finalgrade IS NULL AND gc.aggregateonlygraded = 0) AND gi.itemtype != 'course' AND gi.hidden = 0 ";
     $select = " WHERE (gg.finalgrade IS NULL AND gc.aggregateonlygraded = 0) AND gi.itemtype != 'course' ";
-
-    //If used in cron
-    if(empty($postdata)){
-
-        $row2 = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'ifexportsapcron'));
-        if($row2->value){
-            $select .= " AND gi.ifexportsap = 1 ";
-        }
-    }
 
     //If used in download file
     if(!empty($postdata) and isset($postdata->exportfile)){
@@ -283,14 +269,6 @@ function local_exportmodgrades_query_without_grade($courseid, $postdata){
         WHERE gg.id IS NULL AND gc.aggregateonlygraded = 0 
        
     ";
-
-    //If used in cron
-    if(empty($postdata)){
-        $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'ifexportsapcron'));
-        if($row->value){
-            $select = " AND gi.ifexportsap = 1 ";
-        }
-    }
 
     //If used in download file
     if(!empty($postdata) and isset($postdata->exportfile)){
@@ -391,13 +369,30 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         }
 
         // Export to SAP items manual
-        if($postdata->ifexportsap) {
-            if ($item->itemtype == 'manual' && $item->ifexportsap != 1){
-                continue;
+        //If used in cron
+        if (empty($postdata)) {
+            $row = $DB->get_record('config_plugins', array('plugin' => 'local_exportmodgrades', 'name' => 'ifexportsapcron'));
+            if(isset($row->value) && $row->value == 1){
+                if ($item->itemtype == 'manual' && $item->ifexportsap != 1) {
+                    continue;
+                }
+            } else {
+                if ($item->itemtype == 'manual') {
+                    continue;
+                }
             }
-        }else{
-            if ($item->itemtype == 'manual'){
-                continue;
+        }
+
+        //If used in download file
+        if (!empty($postdata) and isset($postdata->ifexportsap)) {
+            if ($postdata->ifexportsap) {
+                if ($item->itemtype == 'manual' && $item->ifexportsap != 1) {
+                    continue;
+                }
+            } else {
+                if ($item->itemtype == 'manual') {
+                    continue;
+                }
             }
         }
 
