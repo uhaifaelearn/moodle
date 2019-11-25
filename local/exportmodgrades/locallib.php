@@ -297,42 +297,11 @@ function local_exportmodgrades_query_without_grade($courseid, $postdata){
     return $DB->get_records_sql($query, $attributes);
 }
 
-function local_exportmodgrades_generate_output_csv($output, $postdata = array()){
+function local_exportmodgrades_prepare_csv_content($result, $postdata = array()){
     global $DB;
 
     $num = 0;
     $data = array();
-
-    $headers = array(
-        'YEAR',
-        'SEMESTER',
-        'SM_OBJID',
-        'E_OBJID',
-        'MOODLE_ID',
-
-        'Student12',
-        'Grade',
-        'Passed',
-        'Lecturer_ID',
-
-        'LAST_UPDATED',
-    );
-
-    //Start test time execute
-    $start = microtime(true);
-
-    $result = local_exportmodgrades_query_with_grade($postdata);
-    $result = array_merge($result, local_exportmodgrades_query_with_grade_empty($postdata));
-
-    $courses = array();
-    foreach($result as $item){
-        $courses[] = $item->course_id;
-    }
-    $courses = array_unique($courses);
-
-    foreach($courses as $courseid){
-        $result = array_merge($result, local_exportmodgrades_query_without_grade($courseid, $postdata));
-    }
 
     foreach ($result as $item) {
 
@@ -505,8 +474,8 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         $teachers = array_merge($teachers, get_role_users($role->id, $context));
 
         //Coursecreator
-//        $role = $DB->get_record('role', array('shortname' => 'coursecreator'));
-//        $teachers = array_merge($teachers, get_role_users($role->id, $context));
+        //        $role = $DB->get_record('role', array('shortname' => 'coursecreator'));
+        //        $teachers = array_merge($teachers, get_role_users($role->id, $context));
 
         //$arridnumbers = array_column($teachers, 'idnumber');
         //$arridnumbers = array_filter($arridnumbers);
@@ -527,21 +496,59 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
         $num++;
     }
 
-    $time_elapsed_secs = microtime(true) - $start;
-    local_exportmodgrades_log_file_success('Process took  '.$time_elapsed_secs.' sec');
-    //End test time execute
+    return $data;
+}
 
-    //headers
-//    fputcsv($output, $headers);
-//    foreach($data as $row) {
-//        fputcsv($output, $row);
-//    }
+function local_exportmodgrades_generate_output_csv($output, $postdata = array()){
+    global $DB;
+
+    $courses = array();
+    $headers = array(
+        'YEAR',
+        'SEMESTER',
+        'SM_OBJID',
+        'E_OBJID',
+        'MOODLE_ID',
+
+        'Student12',
+        'Grade',
+        'Passed',
+        'Lecturer_ID',
+
+        'LAST_UPDATED',
+    );
 
     //headers
     fputcsv($output, $headers);
-    foreach($data as $row){
+
+    //Start test time execute
+    $start = microtime(true);
+
+    // Step 1.
+    $result = local_exportmodgrades_query_with_grade($postdata);
+    foreach($result as $item){$courses[] = $item->course_id;}
+    foreach(local_exportmodgrades_prepare_csv_content($result, $postdata) as $row){
         fputs($output, implode(",", array_map("local_exportmodgrades_encodeFunc", $row))."\r\n");
     }
+
+    // Step 2.
+    $result = local_exportmodgrades_query_with_grade_empty($postdata);
+    foreach($result as $item){$courses[] = $item->course_id;}
+    foreach(local_exportmodgrades_prepare_csv_content($result, $postdata) as $row){
+        fputs($output, implode(",", array_map("local_exportmodgrades_encodeFunc", $row))."\r\n");
+    }
+
+    // Step 3.
+    $courses = array_unique($courses);
+    foreach($courses as $courseid){
+        foreach(local_exportmodgrades_query_without_grade($courseid, $postdata) as $row){
+            fputs($output, implode(",", array_map("local_exportmodgrades_encodeFunc", $row))."\r\n");
+        }
+    }
+
+    $time_elapsed_secs = microtime(true) - $start;
+    local_exportmodgrades_log_file_success('Process took  '.$time_elapsed_secs.' sec');
+    //End test time execute
 
     return $output;
 }
