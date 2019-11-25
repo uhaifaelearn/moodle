@@ -302,6 +302,7 @@ function local_exportmodgrades_prepare_csv_content($result, $postdata = array())
 
     $num = 0;
     $data = array();
+    $courses = array();
 
     foreach ($result as $item) {
 
@@ -494,9 +495,10 @@ function local_exportmodgrades_prepare_csv_content($result, $postdata = array())
         }
 
         $num++;
+        $courses[] = $item->course_id;
     }
 
-    return $data;
+    return array('data' => $data, 'courses' => $courses);
 }
 
 function local_exportmodgrades_generate_output_csv($output, $postdata = array()){
@@ -526,15 +528,17 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
 
     // Step 1.
     $result = local_exportmodgrades_query_with_grade($postdata);
-    foreach($result as $item){$courses[] = $item->course_id;}
-    foreach(local_exportmodgrades_prepare_csv_content($result, $postdata) as $row){
+    $data = local_exportmodgrades_prepare_csv_content($result, $postdata);
+    $courses = array_merge($courses, $data['courses']);
+    foreach($data['data'] as $row){
         fputs($output, implode(",", array_map("local_exportmodgrades_encodeFunc", $row))."\r\n");
     }
 
     // Step 2.
     $result = local_exportmodgrades_query_with_grade_empty($postdata);
-    foreach($result as $item){$courses[] = $item->course_id;}
-    foreach(local_exportmodgrades_prepare_csv_content($result, $postdata) as $row){
+    $data = local_exportmodgrades_prepare_csv_content($result, $postdata);
+    $courses = array_merge($courses, $data['courses']);
+    foreach($data['data'] as $row){
         fputs($output, implode(",", array_map("local_exportmodgrades_encodeFunc", $row))."\r\n");
     }
 
