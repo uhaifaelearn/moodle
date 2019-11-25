@@ -470,8 +470,10 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
             }
 
             // For assign.
-            if($item->itemmodule == 'assign'){
-                $item->grade = $item->feedback;
+            if($item->itemmodule == 'assign' && empty($passed)){
+                if(is_numeric($item->feedback)) {
+                    $item->grade = $item->feedback;
+                }
             }
         }
 
