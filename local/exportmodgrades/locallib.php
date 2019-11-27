@@ -719,7 +719,7 @@ function local_exportmodgrades_get_courses($postdata) {
     ";
 
     //$select = " WHERE (gg.finalgrade IS NOT NULL OR (gi.itemtype = 'category')) AND gi.itemtype != 'course' AND gi.hidden = 0 ";
-    $select = " WHERE (gg.finalgrade IS NOT NULL OR (gi.itemtype = 'category')) AND gi.itemtype != 'course' ";
+    $select = " WHERE (gg.finalgrade IS NOT NULL OR (gi.itemtype = 'category')) AND gi.itemtype != 'course' AND c.visible=1";
 
     //If used in cron
     if (empty($postdata)) {
