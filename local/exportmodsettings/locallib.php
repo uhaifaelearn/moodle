@@ -201,7 +201,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             if ($periodago != 0) {
                 $attributes = array(time() - $periodago);
                 $select = " WHERE (gi.itemmodule='" . $mod . "' OR (gi.itemmodule IS NULL AND gi.itemtype!='course') OR gi.itemtype='category') 
-                    AND gi.ifexportsap=1 AND IF(a.timemodified IS NOT NULL, GREATEST(a.timemodified, gi.timemodified), gi.timemodified ) > ?  ";
+                    AND IF(a.timemodified IS NOT NULL, GREATEST(a.timemodified, gi.timemodified), gi.timemodified ) > ?  ";
             } else {
                 $attributes = array();
                 $select = " WHERE (gi.itemmodule='" . $mod .
