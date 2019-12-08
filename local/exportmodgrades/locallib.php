@@ -437,7 +437,7 @@ function local_exportmodgrades_prepare_csv_content($result, $postdata = array())
         $passed = '';
 
         // Calculate PASSED T/F  For special settings.
-        if ($item->gradetype == 2 && $item->scaleid == 3) {
+        if ($item->gradetype == 2 && in_array($item->scaleid , array(7, 2, 6, 3))) {
             if (!empty($item->grade) && round($item->grade) == 1) {
                 $passed = 'F';
                 $item->grade = '';
