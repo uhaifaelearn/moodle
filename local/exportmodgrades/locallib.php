@@ -77,6 +77,7 @@ function local_exportmodgrades_query_with_grade($postdata) {
             gi.itemtype AS itemtype,
             gi.itemmodule AS itemmodule,            
             u.idnumber AS student12,
+            gi.hidden AS hidden,
                         
             CASE WHEN gg.finalgrade IS NULL THEN 0 ELSE gg.finalgrade END AS grade,
                         
@@ -97,7 +98,7 @@ function local_exportmodgrades_query_with_grade($postdata) {
     ";
 
     //$select = " WHERE (gg.finalgrade IS NOT NULL OR (gi.itemtype = 'category')) AND gi.itemtype != 'course' AND gi.hidden = 0 ";
-    $select = " WHERE (gg.finalgrade IS NOT NULL OR (gi.itemtype = 'category')) AND gi.itemtype != 'course' AND c.visible=1 ";
+    $select = " WHERE (gg.finalgrade IS NOT NULL OR (gi.itemtype = 'category')) AND gi.itemtype != 'course' AND c.visible = 1 AND gi.hidden = 0 ";
 
     //If used in cron
     if (empty($postdata)) {
@@ -155,6 +156,7 @@ function local_exportmodgrades_query_with_grade_empty($postdata) {
             gi.itemtype AS itemtype,
             gi.itemmodule AS itemmodule,            
             u.idnumber AS student12,
+            gi.hidden AS hidden,
                         
             CASE WHEN gg.finalgrade IS NULL THEN 0 ELSE gg.finalgrade END AS grade,
                         
@@ -175,7 +177,7 @@ function local_exportmodgrades_query_with_grade_empty($postdata) {
     ";
 
     //$select = " WHERE (gg.finalgrade IS NULL AND gc.aggregateonlygraded = 0) AND gi.itemtype != 'course' AND gi.hidden = 0 ";
-    $select = " WHERE (gg.finalgrade IS NULL AND gc.aggregateonlygraded = 0) AND gi.itemtype != 'course' AND c.visible=1";
+    $select = " WHERE (gg.finalgrade IS NULL AND gc.aggregateonlygraded = 0) AND gi.itemtype != 'course' AND c.visible = 1 AND gi.hidden = 0 ";
 
     //If used in download file
     if (!empty($postdata) and isset($postdata->exportfile)) {
@@ -239,7 +241,8 @@ function local_exportmodgrades_query_without_grade($courseid, $postdata) {
         gi.gradepass AS gradepass,
         gi.gradetype AS gradetype,
         gi.scaleid AS scaleid,
-        gi.ifexportsap AS ifexportsap
+        gi.ifexportsap AS ifexportsap,
+        gi.hidden AS hidden
         
         FROM (
             SELECT
@@ -256,7 +259,8 @@ function local_exportmodgrades_query_without_grade($courseid, $postdata) {
                 gi.ifexportsap AS ifexportsap,
                 u.idnumber AS student12,
                 0 AS finalgrade,
-                0 AS grade
+                0 AS grade,
+                gi.hidden AS hidden
                 
             FROM {grade_items} AS gi, {user} AS u
         
@@ -267,7 +271,7 @@ function local_exportmodgrades_query_without_grade($courseid, $postdata) {
         LEFT JOIN {grade_grades} AS gg ON (gg.itemid = gi.giid AND gg.userid = gi.userid)
         LEFT JOIN {grade_categories} AS gc ON (gc.id = gi.categoryid)
         
-        WHERE gg.id IS NULL AND gc.aggregateonlygraded = 0 AND c.visible=1
+        WHERE gg.id IS NULL AND gc.aggregateonlygraded = 0 AND c.visible = 1 AND gi.hidden = 0
        
     ";
 

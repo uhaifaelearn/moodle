@@ -167,8 +167,9 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             gi.aggregationcoef2 AS weight,
             gi.weightoverride AS weightoverride,
             IF(gi.hidden = 0, 1, '' ) AS obligatory,
+            gi.hidden AS hidden,
             gi.gradepass AS pass_grade,
-            
+                        
             gi.itemtype AS itemtype,
             IF(gi.itemtype='category', 
                 (
@@ -295,6 +296,11 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
         foreach ($items['data'] as $item) {
 
             if (empty($item->assign_type)) {
+                continue;
+            }
+
+            // If item is visible.
+            if (empty($item->hidden == 0)) {
                 continue;
             }
 
@@ -464,6 +470,13 @@ function exportmodsettings_recursive($children, $result, $quizenable, $exportsap
             $obj->obligatory = ($first_item['object']->hidden == 0) ? 'X' : '';
             $obj->timecreated = $first_item['object']->timecreated;
             $obj->timemodified = $first_item['object']->timemodified;
+            $obj->hidden = $first_item['object']->hidden;
+
+            if ($first_item['object']->weightoverride && $first_item['object']->aggregationcoef2){
+                $obj->weight = $first_item['object']->aggregationcoef2;
+            }else{
+                $obj->weight = 0;
+            }
 
             // Set default.
             $obj->count_children = 0;
@@ -545,6 +558,7 @@ function exportmodsettings_recursive($children, $result, $quizenable, $exportsap
             $obj->assign_for_avg = 0;
             $obj->assign_name = $object->itemname;
             $obj->obligatory = ($object->hidden == 0) ? 'X' : '';
+            $obj->hidden = $object->hidden;
 
             //Change timecreated and timemodified if mod
             $obj->timecreated = $object->timecreated;
