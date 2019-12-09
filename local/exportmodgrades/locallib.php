@@ -411,6 +411,11 @@ function local_exportmodgrades_prepare_csv_content($result, $postdata = array())
             continue;
         }
 
+        //if activity has non default scale
+        if ($item->gradetype == 2 && !in_array($item->scaleid , array(7, 2, 6, 3))) {
+            continue;
+        }
+
         $data[$num]['YEAR'] = $yearvalue;
         $data[$num]['SEMESTER'] = $semestrvalue;
         $data[$num]['SM_OBJID'] = $smobjid;
