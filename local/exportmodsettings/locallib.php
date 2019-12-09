@@ -304,6 +304,11 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
                 continue;
             }
 
+            //if activity has non default scale
+            if ($item->gradetype == 2 && !in_array($item->scaleid , array(7, 2, 6, 3))) {
+                continue;
+            }
+
             //Use dates between
             if (!empty($attributes)) {
                 if (count($attributes) == 1) {
@@ -434,6 +439,8 @@ function exportmodsettings_recursive($children, $result, $quizenable, $exportsap
     $obj->table = $object->table;
     $obj->itemtype = $object->itemtype;
     $obj->itemmodule = $object->itemmodule;
+    $obj->gradetype = $object->gradetype;
+    $obj->scaleid = $object->scaleid;
 
     // Export to SAP items manual
     $gi = $DB->get_record('grade_items', array('id' => $object->id));
