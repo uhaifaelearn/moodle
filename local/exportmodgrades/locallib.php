@@ -446,13 +446,13 @@ function local_exportmodgrades_prepare_csv_content($result, $postdata = array())
         $passed = '';
 
         // Calculate PASSED T/F  For special settings.
-        if ($item->gradetype == 2 && in_array($item->scaleid , array(7, 2, 6, 3))) {
-            if (!empty($item->grade) && round($item->grade) == 1) {
+        if ($item->gradetype == 2 && in_array($item->scaleid , array(7, 2, 3))) {
+            if (!empty($item->grade) && $item->grade == 1) {
                 $passed = 'F';
                 $item->grade = '';
             }
 
-            if (!empty($item->grade) && round($item->grade) == 2) {
+            if (!empty($item->grade) && $item->grade == 2) {
                 $passed = 'P';
                 $item->grade = '';
             }
@@ -464,6 +464,29 @@ function local_exportmodgrades_prepare_csv_content($result, $postdata = array())
                 }
             }
         }
+
+        // Calculate PASSED T/F  For special settings.
+        if ($item->gradetype == 2 && $item->scaleid == 6) {
+            if (!empty($item->grade) && $item->grade == 2) {
+                $passed = 'F';
+                $item->grade = '';
+            }
+
+            if (!empty($item->grade) && $item->grade == 1) {
+                $passed = 'P';
+                $item->grade = '';
+            }
+
+            // For assign.
+            if ($item->itemmodule == 'assign' && empty($passed)) {
+                if (is_numeric($item->feedback)) {
+                    $item->grade = $item->feedback;
+                }
+            }
+        }
+
+
+
 
         // Calculate PASSED T/F for quiz.
         //if($item->itemmodule == 'quiz'){
