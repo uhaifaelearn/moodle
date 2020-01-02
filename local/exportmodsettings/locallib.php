@@ -286,6 +286,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
         }
     }
 
+    $tatitems = array();
     foreach ($courses as $course) {
         $items = exportmodsettings_build_grade_course($course['courseid'], $quizenable, $exportsapenable);
         $yearvalue = $course['yearvalue'];
@@ -349,11 +350,13 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
                 $data[$num]['LAST_UPDATED'] = date('Ymd', $item->timemodified);
             }
 
+            $tatitems = local_exportmodsettings_duplicate_tat_courses($course['courseid'], $data[$num], $tatitems);
+
             $num++;
         }
     }
 
-    $data = local_exportmodsettings_duplicate_tat_courses($course['courseid'], $data);
+    $data = array_merge($data, $tatitems);
 
     $time_elapsed_secs = microtime(true) - $start;
     local_exportmodsettings_log_file_success('Process took  ' . $time_elapsed_secs . ' sec');
@@ -374,7 +377,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
     return $output;
 }
 
-function local_exportmodsettings_duplicate_tat_courses($courseid, $data) {
+function local_exportmodsettings_duplicate_tat_courses($courseid, $data, $tatitems) {
     global $DB;
 
     // Get tat courses.
@@ -389,7 +392,7 @@ function local_exportmodsettings_duplicate_tat_courses($courseid, $data) {
     ";
     $tatcourses = $DB->get_records_sql($sql, array($courseid));
 
-    $datatmp = $data;
+    $result = array();
     foreach ($tatcourses as $tatcourse) {
         $arridnumber = explode('-', $tatcourse->idnumber);
         $smobjid = (isset($arridnumber[1])) ? $arridnumber[1] : '';
@@ -402,15 +405,18 @@ function local_exportmodsettings_duplicate_tat_courses($courseid, $data) {
             continue;
         }
 
-        foreach ($datatmp as $key => $item) {
-            $datatmp[$key]['SM_OBJID'] = $smobjid;
-            $datatmp[$key]['E_OBJID'] = $eobjid;
-        }
+        $data['SM_OBJID'] = $smobjid;
+        $data['E_OBJID'] = $eobjid;
 
-        $data = array_merge($data, $datatmp);
+        $result[] = $data;
     }
 
-    return $data;
+    foreach($result as $item){
+        $tatitems[] = $item;
+    }
+
+    //echo '<pre>';print_r($result);exit;
+    return $tatitems;
 }
 
 function local_exportmodsettings_encodeFunc($value) {
