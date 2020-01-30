@@ -568,26 +568,30 @@ function local_exportmodgrades_generate_output_csv($output, $postdata = array())
     $start = microtime(true);
 
     // Step 1.
-    $result = local_exportmodgrades_query_with_grade($postdata);
-    $data = local_exportmodgrades_prepare_csv_content($result, $postdata);
+    $result1 = local_exportmodgrades_query_with_grade($postdata);
+    $data = local_exportmodgrades_prepare_csv_content($result1, $postdata);
     $courses = array_merge($courses, $data['courses']);
     foreach ($data['data'] as $row) {
         fputs($output, implode(",", array_map("local_exportmodgrades_encodeFunc", $row)) . "\r\n");
     }
 
     // Step 2.
-    $result = local_exportmodgrades_query_with_grade_empty($postdata);
-    $data = local_exportmodgrades_prepare_csv_content($result, $postdata);
-    $courses = array_merge($courses, $data['courses']);
-    foreach ($data['data'] as $row) {
-        fputs($output, implode(",", array_map("local_exportmodgrades_encodeFunc", $row)) . "\r\n");
+    if(!empty($result1)) {
+        $result2 = local_exportmodgrades_query_with_grade_empty($postdata);
+        $data = local_exportmodgrades_prepare_csv_content($result2, $postdata);
+        $courses = array_merge($courses, $data['courses']);
+        foreach ($data['data'] as $row) {
+            fputs($output, implode(",", array_map("local_exportmodgrades_encodeFunc", $row)) . "\r\n");
+        }
     }
 
     // Step 3.
-    $courses = array_unique($courses);
-    foreach ($courses as $courseid) {
-        foreach (local_exportmodgrades_query_without_grade($courseid, $postdata) as $row) {
-            fputs($output, implode(",", array_map("local_exportmodgrades_encodeFunc", $row)) . "\r\n");
+    if(!empty($result1)) {
+        $courses = array_unique($courses);
+        foreach ($courses as $courseid) {
+            foreach (local_exportmodgrades_query_without_grade($courseid, $postdata) as $row) {
+                fputs($output, implode(",", array_map("local_exportmodgrades_encodeFunc", $row)) . "\r\n");
+            }
         }
     }
 
