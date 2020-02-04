@@ -301,7 +301,7 @@ function local_exportmodsettings_generate_output_csv($output, $postdata = array(
             }
 
             // If item is visible.
-            if (empty($item->hidden == 0)) {
+            if (empty($item->hidden != 1)) {
                 continue;
             }
 

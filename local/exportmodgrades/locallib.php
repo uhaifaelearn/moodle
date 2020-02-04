@@ -98,7 +98,7 @@ function local_exportmodgrades_query_with_grade($postdata) {
     ";
 
     //$select = " WHERE (gg.finalgrade IS NOT NULL OR (gi.itemtype = 'category')) AND gi.itemtype != 'course' AND gi.hidden = 0 ";
-    $select = " WHERE (gg.finalgrade IS NOT NULL OR (gi.itemtype = 'category')) AND gi.itemtype != 'course' AND c.visible = 1 AND gi.hidden = 0 ";
+    $select = " WHERE (gg.finalgrade IS NOT NULL OR (gi.itemtype = 'category')) AND gi.itemtype != 'course' AND c.visible = 1 AND gi.hidden != 1 ";
 
     //If used in cron
     if (empty($postdata)) {
@@ -177,7 +177,7 @@ function local_exportmodgrades_query_with_grade_empty($postdata) {
     ";
 
     //$select = " WHERE (gg.finalgrade IS NULL AND gc.aggregateonlygraded = 0) AND gi.itemtype != 'course' AND gi.hidden = 0 ";
-    $select = " WHERE (gg.finalgrade IS NULL AND gc.aggregateonlygraded = 0) AND gi.itemtype != 'course' AND c.visible = 1 AND gi.hidden = 0 ";
+    $select = " WHERE (gg.finalgrade IS NULL AND gc.aggregateonlygraded = 0) AND gi.itemtype != 'course' AND c.visible = 1 AND gi.hidden != 1 ";
 
     //If used in download file
     if (!empty($postdata) and isset($postdata->exportfile)) {
@@ -271,7 +271,7 @@ function local_exportmodgrades_query_without_grade($courseid, $postdata) {
         LEFT JOIN {grade_grades} AS gg ON (gg.itemid = gi.giid AND gg.userid = gi.userid)
         LEFT JOIN {grade_categories} AS gc ON (gc.id = gi.categoryid)
         
-        WHERE gg.id IS NULL AND gc.aggregateonlygraded = 0 AND c.visible = 1 AND gi.hidden = 0
+        WHERE gg.id IS NULL AND gc.aggregateonlygraded = 0 AND c.visible = 1 AND gi.hidden != 1
        
     ";
 
