@@ -17,41 +17,35 @@
 /**
  * Code to be executed after the plugin's database scheme has been installed is defined here.
  *
- * @package     local_exportmodsettings
+ * @package     local_exportmodgrades
  * @category    upgrade
  * @copyright   2017 nadavkav@gmail.com
  * @license     http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
+
 defined('MOODLE_INTERNAL') || die();
-require_once($CFG->dirroot .'/local/exportmodsettings/locallib.php');
 
 /**
- * Custom code to be run on installing the plugin.
+ * @param int $oldversion the version we are upgrading from
+ * @return bool result
  */
-function xmldb_local_exportmodsettings_install() {
-    global $DB;
+function xmldb_local_exportmodgrades_upgrade($oldversion) {
 
+    global $DB;
     $dbman = $DB->get_manager();
 
-    $array = SETTINGSCRONPERIODS;
-    reset($array);
-    $firstkey = key($array);
+        // Add field to grade_items.
+        if ($oldversion < 2018110702) {
+            // Define field completionpass to be added to quiz.
+            $table = new xmldb_table('grade_items');
+            $field = new xmldb_field('ifexportsap', XMLDB_TYPE_INTEGER, '3', null, null, null, null, 'weightoverride');
 
-    $obj = new \stdClass();
-    $obj->plugin = 'local_exportmodsettings';
-    $obj->name = 'crontime';
-    $obj->value = $firstkey + 1;
-    $DB->insert_record('config_plugins', $obj);
-
-    // Add field to grade_items.
-    $table = new xmldb_table('grade_items');
-    $field = new xmldb_field('ifexportsap', XMLDB_TYPE_INTEGER, '3', null, null, null, null, 'weightoverride');
-
-    // Conditionally launch add field completionpass.
-    if (!$dbman->field_exists($table, $field)) {
-        $dbman->add_field($table, $field);
-    }
+            // Conditionally launch add field completionpass.
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
 
     return true;
 }

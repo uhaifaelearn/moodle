@@ -32,6 +32,8 @@ require_once($CFG->dirroot .'/local/exportmodgrades/locallib.php');
 function xmldb_local_exportmodgrades_install() {
     global $DB;
 
+    $dbman = $DB->get_manager();
+
     $array = GRADESCRONPERIODS;
     reset($array);
     $firstkey = key($array);
@@ -41,6 +43,15 @@ function xmldb_local_exportmodgrades_install() {
     $obj->name = 'crontime';
     $obj->value = $firstkey + 1;
     $DB->insert_record('config_plugins', $obj);
+
+    // Add field to grade_items.
+    $table = new xmldb_table('grade_items');
+    $field = new xmldb_field('ifexportsap', XMLDB_TYPE_INTEGER, '3', null, null, null, null, 'weightoverride');
+
+    // Conditionally launch add field completionpass.
+    if (!$dbman->field_exists($table, $field)) {
+        $dbman->add_field($table, $field);
+    }
 
     return true;
 }
