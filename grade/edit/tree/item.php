@@ -186,11 +186,25 @@ if ($mform->is_cancelled()) {
     }
 
     // Save ifexportsap.
-    $row = $DB->get_record('grade_items', array('id' => $grade_item->id));
-    if(!empty($row)){
-        $row->ifexportsap = $data->ifexportsap;
-        $sql = "UPDATE {grade_items} SET ifexportsap = ? WHERE id = ?";
-        $DB->execute($sql, array($data->ifexportsap, $grade_item->id));
+    $girow = $DB->get_record('grade_items', array('id' => $grade_item->id));
+    if(!empty($girow)){
+        $girow->ifexportsap = $data->ifexportsap;
+
+        if($data->ifexportsap == 1){
+            $girow->timemodified = time();
+        }
+        $DB->update_record('grade_items', $girow);
+
+        //$sql = "UPDATE {grade_items} SET ifexportsap = ? WHERE id = ?";
+        //$DB->execute($sql, array($data->ifexportsap, $grade_item->id));
+
+        $ggrow = $DB->get_records('grade_grades', array('itemid' => $girow->id));
+        foreach($ggrow as $item){
+            if($data->ifexportsap == 1){
+                $item->timemodified = time();
+                $DB->update_record('grade_grades', $item);
+            }
+        }
     }
 
     // update hiding flag
